@@ -7,7 +7,7 @@ import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/config"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	grpcMetadata "google.golang.org/grpc/metadata"
@@ -18,19 +18,13 @@ import (
 func main() {
 	log := loggy.GetLogger().Sugar()
 
-	var tradeBotConfig config.TradeBotConfig
-
-	err := envconfig.Process("tradebot", &tradeBotConfig)
-	if err != nil {
-		log.Fatalf("failed to process config: %v", err)
-	}
-
+	tradeBotConfig := config.GetTradeBotConfig()
 	if tradeBotConfig.Token == "" {
 		log.Fatal("TRADEBOT_TOKEN environment variable is required to run this program")
 	}
 
 	tlsConfig := tls.Config{}
-	conn, err := grpc.Dial(tradeBotConfig.ApiURL, grpc.WithTransportCredentials(credentials.NewTLS(&tlsConfig)))
+	conn, err := grpc.Dial(config.ApiURL, grpc.WithTransportCredentials(credentials.NewTLS(&tlsConfig)))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err.Error())
 	} else {
@@ -42,12 +36,14 @@ func main() {
 
 	authHeader := fmt.Sprintf("Bearer %s", tradeBotConfig.Token)
 	ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", authHeader)
+	ctx = grpcMetadata.AppendToOutgoingContext(ctx, "x-tracking-id", uuid.New().String())
+	ctx = grpcMetadata.AppendToOutgoingContext(ctx, "x-app-name", config.AppName)
 
-	client := pb.NewSandboxServiceClient(conn)
-	r, err := client.GetSandboxAccounts(ctx, &pb.GetAccountsRequest{})
+	sandboxServiceClient := pb.NewSandboxServiceClient(conn)
+	r1, err := sandboxServiceClient.GetSandboxAccounts(ctx, &pb.GetAccountsRequest{})
 	if err != nil {
 		log.Error(err.Error())
 	}
 
-	log.Info(r)
+	log.Info(r1)
 }
