@@ -1,2 +1,11 @@
 # TinkoffInvestRobotContest
- разработка торгового робота для Тинькофф Инвестиций. 
+
+Trading Bot based on [Tinkoff Invest API](https://github.com/Tinkoff/investAPI)
+
+## Installation
+
+## Configuration
+
+## Troubleshooting
+
+## License
