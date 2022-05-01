@@ -22,13 +22,17 @@ func main() {
 
 	err := envconfig.Process("tradebot", &tradeBotConfig)
 	if err != nil {
-		log.Fatal("failed to process config: " + err.Error())
+		log.Fatalf("failed to process config: %v", err)
+	}
+
+	if tradeBotConfig.Token == "" {
+		log.Fatal("TRADEBOT_TOKEN environment variable is required to run this program")
 	}
 
 	tlsConfig := tls.Config{}
 	conn, err := grpc.Dial(tradeBotConfig.ApiURL, grpc.WithTransportCredentials(credentials.NewTLS(&tlsConfig)))
 	if err != nil {
-		log.Fatal("did not connect: " + err.Error())
+		log.Fatalf("did not connect: %v", err.Error())
 	} else {
 		defer conn.Close()
 	}
