@@ -17,9 +17,9 @@ type OrdersInterface interface {
 	// Метод отмены биржевой заявки.
 	CancelOrder(accountID AccountID, orderID OrderID) (*timestamp.Timestamp, error)
 	// Метод получения статуса торгового поручения.
-	GetOrderState(accountID AccountID, orderID OrderID) (*OrderState, error)
+	GetOrderState(accountID AccountID, orderID OrderID) (*pb.OrderState, error)
 	// Метод получения списка активных заявок по счёту.
-	GetOrders(accountID AccountID) ([]*OrderState, error)
+	GetOrders(accountID AccountID) ([]*pb.OrderState, error)
 }
 
 type OrdersService struct {

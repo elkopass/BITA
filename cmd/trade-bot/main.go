@@ -8,20 +8,28 @@ import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/trade/strategy/gamble"
 )
 
-
 func main() {
 	log := loggy.GetLogger().Sugar()
 
-	tradeBotConfig := config.TradeBotConfig()
-
-	var bot trade.Trader
-	switch tradeBotConfig.Strategy {
-		case strategy.GAMBLE:
-			bot = gamble.NewTraderBot()
-		default:
-			log.Fatalf("unknown strategy '%s'", tradeBotConfig.Strategy)
-			return
+	cnf := config.TradeBotConfig()
+	if cnf.IsSandbox {
+		log.Infof("running in sandbox mode with %s strategy", cnf.Strategy)
+	} else {
+		log.Warnf("[DANGER] running without sandbox with %s strategy, I hope you know what you doing", cnf.Strategy)
 	}
 
-	bot.Run()
+	var bot trade.Trader
+	switch cnf.Strategy {
+	case strategy.GAMBLE:
+		bot = gamble.NewTraderBot()
+	default:
+		log.Fatalf("unknown strategy '%s'", cnf.Strategy)
+		return
+	}
+
+	if cnf.IsSandbox {
+		bot.RunInSandbox()
+	} else {
+		bot.Run()
+	}
 }
