@@ -6,11 +6,6 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
-type OrdersStreamInterface interface {
-	// Stream сделок пользователя
-	TradesStream(in *pb.TradesStreamRequest) (pb.OrdersStreamService_TradesStreamClient, error)
-}
-
 type OrdersInterface interface {
 	// Метод выставления заявки.
 	PostOrder(order *pb.PostOrderRequest) (*pb.PostOrderResponse, error)
