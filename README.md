@@ -1,5 +1,7 @@
 # TinkoffInvestRobotContest
 
+[![CI-CD](https://github.com/elkopass/TinkoffInvestRobotContest/actions/workflows/main.yml/badge.svg)](https://github.com/elkopass/TinkoffInvestRobotContest/actions/workflows/main.yml)
+
 Trading Bot based on [Tinkoff Invest API](https://github.com/Tinkoff/investAPI)
 
 ![TradeBot logo](logo.png)
