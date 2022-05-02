@@ -1,7 +1,6 @@
 package sdk
 
 import (
-	"errors"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -11,11 +10,11 @@ type MarketDataInterface interface {
 	// Метод запроса исторических свечей по инструменту.
 	GetCandles(figi Figi, from, to *timestamp.Timestamp, interval pb.CandleInterval) ([]*pb.HistoricCandle, error)
 	// Метод запроса последних цен по инструментам.
-	GetLastPrices(figi Figi) ([]*pb.LastPrice, error)
+	GetLastPrices(figi []string) ([]*pb.LastPrice, error)
 	// Метод получения стакана по инструменту.
-	GetOrderBook(figi Figi, depth int) (*pb.OrderBook, error)
+	GetOrderBook(figi Figi, depth int) (*pb.GetOrderBookResponse, error)
 	// Метод запроса статуса торгов по инструментам.
-	GetTradingStatus(figi Figi) (*pb.TradingStatus, error)
+	GetTradingStatus(figi Figi) (*pb.GetTradingStatusResponse, error)
 	// Метод запроса последних обезличенных сделок по инструменту.
 	GetLastTrades(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Trade, error)
 }
@@ -35,21 +34,77 @@ func NewMarketDataService() *MarketDataService {
 }
 
 func (mds MarketDataService) GetCandles(figi Figi, from, to *timestamp.Timestamp, interval pb.CandleInterval) ([]*pb.HistoricCandle, error) {
-	return nil, errors.New("method not implemented")
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := mds.client.GetCandles(ctx, &pb.GetCandlesRequest{
+		Figi: string(figi),
+		From: from,
+		To: to,
+		Interval: interval,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Candles, nil
 }
 
-func (mds MarketDataService) GetLastPrices(figi Figi) ([]*pb.LastPrice, error) {
-	return nil, errors.New("method not implemented")
+func (mds MarketDataService) GetLastPrices(figi []string) ([]*pb.LastPrice, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := mds.client.GetLastPrices(ctx, &pb.GetLastPricesRequest{
+		Figi: figi,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.LastPrices, nil
 }
 
-func (mds MarketDataService) GetOrderBook(figi Figi, depth int) (*pb.OrderBook, error) {
-	return nil, errors.New("method not implemented")
+func (mds MarketDataService) GetOrderBook(figi Figi, depth int) (*pb.GetOrderBookResponse, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := mds.client.GetOrderBook(ctx, &pb.GetOrderBookRequest{
+		Figi: string(figi),
+		Depth: int32(depth),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
-func (mds MarketDataService) GetTradingStatus(figi Figi) (*pb.TradingStatus, error) {
-	return nil, errors.New("method not implemented")
+func (mds MarketDataService) GetTradingStatus(figi Figi) (*pb.GetTradingStatusResponse, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := mds.client.GetTradingStatus(ctx, &pb.GetTradingStatusRequest{
+		Figi: string(figi),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (mds MarketDataService) GetLastTrades(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Trade, error) {
-	return nil, errors.New("method not implemented")
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := mds.client.GetLastTrades(ctx, &pb.GetLastTradesRequest{
+		Figi: string(figi),
+		From: from,
+		To: to,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Trades, nil
 }
