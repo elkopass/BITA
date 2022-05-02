@@ -1,0 +1,28 @@
+package gamble
+
+import (
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
+	"github.com/kelseyhightower/envconfig"
+)
+
+var services = sdk.NewServicePool()
+
+type TradeConfig struct {
+	Figi           []string `required:"true"`
+	AmountToBuy    int      `split_words:"true"`
+	TakeProfitCoef float64  `split_words:"true"`
+	StopLossCoef   float64  `split_words:"true"`
+	TrendToTrade   float64  `split_words:"true"`
+}
+
+func NewTradeConfig() *TradeConfig {
+	var c TradeConfig
+	err := envconfig.Process("gamble_strategy", &c)
+	if err != nil {
+		loggy.GetLogger().Sugar().Fatalf("failed to process config: %v", err)
+	}
+
+	return &c
+}
+
