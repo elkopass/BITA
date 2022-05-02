@@ -6,7 +6,6 @@ import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
-	"time"
 )
 
 type TraderStrategyConfig struct {
@@ -18,10 +17,10 @@ type TraderStrategyConfig struct {
 }
 
 type TraderState struct {
-	currentPurchasePrice  *float64
-	currentPurchaseAmount *int
-	lastPurchaseTime      *time.Time
-	lastSellTime          *time.Time
+	//currentPurchasePrice  *float64
+	//currentPurchaseAmount *int
+	//lastPurchaseTime      *time.Time
+	//lastSellTime          *time.Time
 }
 
 type TraderBot struct {
