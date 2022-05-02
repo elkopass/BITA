@@ -15,7 +15,7 @@
 # vendor/
 
 # Environment
-.env
+*/**/.env
 
 # Project folder
 .idea/
