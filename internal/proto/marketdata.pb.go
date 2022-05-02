@@ -583,7 +583,7 @@ func (m *SubscribeCandlesRequest) GetInstruments() []*CandleInstrument {
 //Запрос изменения статус подписки на свечи.
 type CandleInstrument struct {
 	Figi                 string               `protobuf:"bytes,1,opt,name=figi,proto3" json:"figi,omitempty"`
-	Interval             SubscriptionInterval `protobuf:"varint,2,opt,name=interval,proto3,enum=tinkoff.public.invest.api.contract.v1.SubscriptionInterval" json:"interval,omitempty"`
+	Interval             SubscriptionInterval `protobuf:"varint,2,opt,name=gamble,proto3,enum=tinkoff.public.invest.api.contract.v1.SubscriptionInterval" json:"gamble,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
@@ -679,7 +679,7 @@ func (m *SubscribeCandlesResponse) GetCandlesSubscriptions() []*CandleSubscripti
 //Статус подписки на свечи.
 type CandleSubscription struct {
 	Figi                 string               `protobuf:"bytes,1,opt,name=figi,proto3" json:"figi,omitempty"`
-	Interval             SubscriptionInterval `protobuf:"varint,2,opt,name=interval,proto3,enum=tinkoff.public.invest.api.contract.v1.SubscriptionInterval" json:"interval,omitempty"`
+	Interval             SubscriptionInterval `protobuf:"varint,2,opt,name=gamble,proto3,enum=tinkoff.public.invest.api.contract.v1.SubscriptionInterval" json:"gamble,omitempty"`
 	SubscriptionStatus   SubscriptionStatus   `protobuf:"varint,3,opt,name=subscription_status,json=subscriptionStatus,proto3,enum=tinkoff.public.invest.api.contract.v1.SubscriptionStatus" json:"subscription_status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
@@ -1487,7 +1487,7 @@ func (m *LastPriceSubscription) GetSubscriptionStatus() SubscriptionStatus {
 //Пакет свечей в рамках стрима.
 type Candle struct {
 	Figi                 string               `protobuf:"bytes,1,opt,name=figi,proto3" json:"figi,omitempty"`
-	Interval             SubscriptionInterval `protobuf:"varint,2,opt,name=interval,proto3,enum=tinkoff.public.invest.api.contract.v1.SubscriptionInterval" json:"interval,omitempty"`
+	Interval             SubscriptionInterval `protobuf:"varint,2,opt,name=gamble,proto3,enum=tinkoff.public.invest.api.contract.v1.SubscriptionInterval" json:"gamble,omitempty"`
 	Open                 *Quotation           `protobuf:"bytes,3,opt,name=open,proto3" json:"open,omitempty"`
 	High                 *Quotation           `protobuf:"bytes,4,opt,name=high,proto3" json:"high,omitempty"`
 	Low                  *Quotation           `protobuf:"bytes,5,opt,name=low,proto3" json:"low,omitempty"`
@@ -1881,7 +1881,7 @@ type GetCandlesRequest struct {
 	Figi                 string               `protobuf:"bytes,1,opt,name=figi,proto3" json:"figi,omitempty"`
 	From                 *timestamp.Timestamp `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty"`
 	To                   *timestamp.Timestamp `protobuf:"bytes,3,opt,name=to,proto3" json:"to,omitempty"`
-	Interval             CandleInterval       `protobuf:"varint,4,opt,name=interval,proto3,enum=tinkoff.public.invest.api.contract.v1.CandleInterval" json:"interval,omitempty"`
+	Interval             CandleInterval       `protobuf:"varint,4,opt,name=gamble,proto3,enum=tinkoff.public.invest.api.contract.v1.CandleInterval" json:"gamble,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
 	XXX_unrecognized     []byte               `json:"-"`
 	XXX_sizecache        int32                `json:"-"`
