@@ -1,6 +1,7 @@
 package trade
 
+import "context"
+
 type Trader interface {
-	Run()
-	RunInSandbox()
+	Run(ctx context.Context) (err error)
 }

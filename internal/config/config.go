@@ -7,9 +7,11 @@ import (
 )
 
 const (
-	ApiURL         = "invest-public-api.tinkoff.ru:443"
-	AppName        = "elkopass.TinkoffInvestRobotContest"
-	DefaultTimeout = 30 * time.Second
+	ApiURL  = "invest-public-api.tinkoff.ru:443"
+	AppName = "elkopass.TinkoffInvestRobotContest"
+
+	DefaultRequestTimeout   = 30 * time.Second
+	// GracefulShutdownTimeout = 60 * time.Second
 )
 
 type tradeBotConfig struct {
@@ -21,10 +23,26 @@ type tradeBotConfig struct {
 	SellOnExit string `default:"false" split_words:"true"`
 }
 
+type metricsConfig struct {
+	Enabled  bool   `default:"true" split_words:"true"`
+	Addr     string `default:":8080" split_words:"true"`
+	Endpoint string `default:"/metrics" split_words:"true"`
+}
+
 var (
 	TradeBotConfig = func() tradeBotConfig {
 		var config tradeBotConfig
 		err := envconfig.Process("tradebot", &config)
+		if err != nil {
+			loggy.GetLogger().Sugar().Fatalf("failed to process config: %v", err)
+		}
+
+		return config
+	}
+
+	MetricsConfig = func() metricsConfig {
+		var config metricsConfig
+		err := envconfig.Process("metrics", &config)
 		if err != nil {
 			loggy.GetLogger().Sugar().Fatalf("failed to process config: %v", err)
 		}

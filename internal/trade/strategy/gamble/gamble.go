@@ -1,6 +1,7 @@
 package gamble
 
 import (
+	"context"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
@@ -55,11 +56,7 @@ func NewTraderBot() *TraderBot {
 	}
 }
 
-func (tb TraderBot) Run() {
-	tb.logger.Info("Starting!")
-}
-
-func (tb TraderBot) RunInSandbox() {
+func (tb TraderBot) Run(ctx context.Context) (err error) {
 	tb.logger.Info("starting in sandbox!")
 
 	accountID, err := tb.sandboxService.OpenSandboxAccount()
@@ -80,9 +77,13 @@ func (tb TraderBot) RunInSandbox() {
 	}
 	tb.logger.Infof("account successfully replenished with %d.%d %s", res.Units, res.Nano, res.Currency)
 
+	<-ctx.Done()
+
 	err = tb.sandboxService.CloseSandboxAccount(accountID)
 	if err != nil {
 		tb.logger.Errorf("can't create account: %v", err)
 	}
 	tb.logger.Infof("account with ID %s closed successfully", accountID)
+
+	return nil
 }

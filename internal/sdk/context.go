@@ -9,7 +9,7 @@ import (
 )
 
 func createRequestContext() (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithTimeout(context.Background(), config.DefaultTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), config.DefaultRequestTimeout)
 
 	authHeader := fmt.Sprintf("Bearer %s", config.TradeBotConfig().Token)
 	ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", authHeader)
