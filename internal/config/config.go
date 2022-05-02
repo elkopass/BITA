@@ -2,9 +2,7 @@ package config
 
 import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
-	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
-	"strings"
 	"time"
 )
 
@@ -24,11 +22,6 @@ type tradeBotConfig struct {
 }
 
 var (
-	botID = strings.Split(uuid.New().String(), "-")[0]
-	BotID = func() string {
-		return botID
-	}
-
 	TradeBotConfig = func() tradeBotConfig {
 		var config tradeBotConfig
 		err := envconfig.Process("tradebot", &config)

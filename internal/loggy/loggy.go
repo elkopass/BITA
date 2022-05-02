@@ -1,13 +1,21 @@
 package loggy
 
 import (
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/config"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"os"
+	"strings"
 )
 
 var logger *zap.Logger
+
+var (
+	botID = strings.Split(uuid.New().String(), "-")[0]
+	//GetBotID = func() string {
+	//	return botID
+	//}
+)
 
 func init() {
 	cfg := zap.Config{
@@ -17,7 +25,7 @@ func init() {
 		ErrorOutputPaths: []string{"stderr"},
 		InitialFields: map[string]interface{}{
 			"env": os.Getenv("TRADEBOT_ENV"),
-			"bot_id": config.BotID(),
+			"bot_id": botID,
 		},
 		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey: "message",
