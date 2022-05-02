@@ -9,13 +9,13 @@ import (
 // TODO: implementation
 type OperationsInterface interface {
 	// Метод получения списка операций по счёту.
-	GetOperations(accountID AccountID, from, to *timestamp.Timestamp, state pb.OperationState, figi Figi) ([]*Operation, error)
+	GetOperations(accountID AccountID, from, to *timestamp.Timestamp, state pb.OperationState, figi Figi) ([]*pb.Operation, error)
 	// Метод получения портфеля по счёту.
-	GetPortfolio(accountID AccountID) (*Portfolio, error)
+	GetPortfolio(accountID AccountID) (*pb.PortfolioResponse, error)
 	// Метод получения списка позиций по счёту.
-	GetPositions(accountID AccountID) (*Positions, error)
+	GetPositions(accountID AccountID) (*pb.PositionsResponse, error)
 	// Метод получения доступного остатка для вывода средств.
-	GetWithdrawLimits(accountID AccountID) (*WithdrawLimits, error)
+	GetWithdrawLimits(accountID AccountID) (*pb.WithdrawLimitsResponse, error)
 }
 
 type OperationsService struct {

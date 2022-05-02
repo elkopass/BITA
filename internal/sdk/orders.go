@@ -13,7 +13,7 @@ type OrdersStreamInterface interface {
 
 type OrdersInterface interface {
 	// Метод выставления заявки.
-	PostOrder(order *Order) (*PostOrder, error)
+	PostOrder(order *pb.PostOrderRequest) (*pb.PostOrderResponse, error)
 	// Метод отмены биржевой заявки.
 	CancelOrder(accountID AccountID, orderID OrderID) (*timestamp.Timestamp, error)
 	// Метод получения статуса торгового поручения.

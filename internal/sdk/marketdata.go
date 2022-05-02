@@ -13,9 +13,9 @@ type MarketDataInterface interface {
 	// Метод запроса последних цен по инструментам.
 	GetLastPrices(figi Figi) ([]*pb.LastPrice, error)
 	// Метод получения стакана по инструменту.
-	GetOrderBook(figi Figi, depth int) (*OrderBook, error)
+	GetOrderBook(figi Figi, depth int) (*pb.OrderBook, error)
 	// Метод запроса статуса торгов по инструментам.
-	GetTradingStatus(figi Figi) (*TradingStatus, error)
+	GetTradingStatus(figi Figi) (*pb.TradingStatus, error)
 	// Метод запроса последних обезличенных сделок по инструменту.
 	GetLastTrades(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Trade, error)
 }
