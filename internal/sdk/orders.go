@@ -23,7 +23,7 @@ type OrdersInterface interface {
 }
 
 type OrdersService struct {
-	client *pb.OrdersServiceClient
+	client pb.OrdersServiceClient
 }
 
 func NewOrdersService() *OrdersService {
@@ -33,5 +33,61 @@ func NewOrdersService() *OrdersService {
 	}
 
 	client := pb.NewOrdersServiceClient(conn)
-	return &OrdersService{client: &client}
+	return &OrdersService{client: client}
+}
+
+func (os OrdersService) PostOrder(order *pb.PostOrderRequest) (*pb.PostOrderResponse, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := os.client.PostOrder(ctx, order)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (os OrdersService) CancelOrder(accountID AccountID, orderID OrderID) (*timestamp.Timestamp, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := os.client.CancelOrder(ctx, &pb.CancelOrderRequest{
+		AccountId: string(accountID),
+		OrderId: string(orderID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Time, nil
+}
+
+func (os OrdersService) GetOrderState(accountID AccountID, orderID OrderID) (*pb.OrderState, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := os.client.GetOrderState(ctx, &pb.GetOrderStateRequest{
+		AccountId: string(accountID),
+		OrderId: string(orderID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (os OrdersService) GetOrders(accountID AccountID) ([]*pb.OrderState, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := os.client.GetOrders(ctx, &pb.GetOrdersRequest{
+		AccountId: string(accountID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Orders, nil
 }

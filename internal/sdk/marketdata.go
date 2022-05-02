@@ -1,12 +1,12 @@
 package sdk
 
 import (
+	"errors"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
-// TODO: implementation
 type MarketDataInterface interface {
 	// Метод запроса исторических свечей по инструменту.
 	GetCandles(figi Figi, from, to *timestamp.Timestamp, interval pb.CandleInterval) ([]*pb.HistoricCandle, error)
@@ -21,7 +21,7 @@ type MarketDataInterface interface {
 }
 
 type MarketDataService struct {
-	client *pb.MarketDataServiceClient
+	client pb.MarketDataServiceClient
 }
 
 func NewMarketDataService() *MarketDataService {
@@ -31,5 +31,25 @@ func NewMarketDataService() *MarketDataService {
 	}
 
 	client := pb.NewMarketDataServiceClient(conn)
-	return &MarketDataService{client: &client}
+	return &MarketDataService{client: client}
+}
+
+func (mds MarketDataService) GetCandles(figi Figi, from, to *timestamp.Timestamp, interval pb.CandleInterval) ([]*pb.HistoricCandle, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (mds MarketDataService) GetLastPrices(figi Figi) ([]*pb.LastPrice, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (mds MarketDataService) GetOrderBook(figi Figi, depth int) (*pb.OrderBook, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (mds MarketDataService) GetTradingStatus(figi Figi) (*pb.TradingStatus, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (mds MarketDataService) GetLastTrades(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Trade, error) {
+	return nil, errors.New("method not implemented")
 }

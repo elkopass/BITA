@@ -6,7 +6,6 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
-// TODO: implementation
 type OperationsInterface interface {
 	// Метод получения списка операций по счёту.
 	GetOperations(accountID AccountID, from, to *timestamp.Timestamp, state pb.OperationState, figi Figi) ([]*pb.Operation, error)
@@ -19,7 +18,7 @@ type OperationsInterface interface {
 }
 
 type OperationsService struct {
-	client *pb.OperationsServiceClient
+	client pb.OperationsServiceClient
 }
 
 func NewOperationsService() *OperationsService {
@@ -29,5 +28,65 @@ func NewOperationsService() *OperationsService {
 	}
 
 	client := pb.NewOperationsServiceClient(conn)
-	return &OperationsService{client: &client}
+	return &OperationsService{client: client}
+}
+
+func (os OperationsService) GetOperations(accountID AccountID, from, to *timestamp.Timestamp, state pb.OperationState, figi Figi) ([]*pb.Operation, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := os.client.GetOperations(ctx, &pb.OperationsRequest{
+		AccountId: string(accountID),
+		From: from,
+		To: to,
+		State: state,
+		Figi: string(figi),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Operations, nil
+}
+
+func (os OperationsService) GetPortfolio(accountID AccountID) (*pb.PortfolioResponse, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := os.client.GetPortfolio(ctx, &pb.PortfolioRequest{
+		AccountId: string(accountID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (os OperationsService) GetPositions(accountID AccountID) (*pb.PositionsResponse, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := os.client.GetPositions(ctx, &pb.PositionsRequest{
+		AccountId: string(accountID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (os OperationsService) GetWithdrawLimits(accountID AccountID) (*pb.WithdrawLimitsResponse, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := os.client.GetWithdrawLimits(ctx, &pb.WithdrawLimitsRequest{
+		AccountId: string(accountID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

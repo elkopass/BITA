@@ -5,7 +5,6 @@ import (
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 )
 
-// TODO: implementation
 type UsersServiceClient interface {
 	// Метод получения счетов пользователя.
 	GetAccounts() ([]*pb.Account, error)
@@ -17,9 +16,8 @@ type UsersServiceClient interface {
 	GetInfo() (*pb.GetInfoResponse, error)
 }
 
-
 type UsersService struct {
-	client *pb.UsersServiceClient
+	client pb.UsersServiceClient
 }
 
 func NewUsersService() *UsersService {
@@ -29,5 +27,55 @@ func NewUsersService() *UsersService {
 	}
 
 	client := pb.NewUsersServiceClient(conn)
-	return &UsersService{client: &client}
+	return &UsersService{client: client}
+}
+
+func (us UsersService) GetAccounts() ([]*pb.Account, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := us.client.GetAccounts(ctx, &pb.GetAccountsRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Accounts, nil
+}
+
+func (us UsersService) GetMarginAttributes(accountID AccountID) (*pb.GetMarginAttributesResponse, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := us.client.GetMarginAttributes(ctx, &pb.GetMarginAttributesRequest{
+		AccountId: string(accountID),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (us UsersService) GetUserTariff() (*pb.GetUserTariffResponse, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := us.client.GetUserTariff(ctx, &pb.GetUserTariffRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (us UsersService) GetInfo() (*pb.GetInfoResponse, error) {
+	ctx, cancel := createRequestContext()
+	defer cancel()
+
+	res, err := us.client.GetInfo(ctx, &pb.GetInfoRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

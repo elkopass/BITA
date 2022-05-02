@@ -6,7 +6,6 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
-// TODO: implementation
 type SandboxInterface interface {
 	// Метод регистрации счёта в песочнице.
 	OpenSandboxAccount() (AccountID, error)
@@ -46,7 +45,7 @@ func NewSandboxService() *SandboxService {
 	return &SandboxService{client: client}
 }
 
-func (ss *SandboxService) OpenSandboxAccount() (AccountID, error) {
+func (ss SandboxService) OpenSandboxAccount() (AccountID, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 

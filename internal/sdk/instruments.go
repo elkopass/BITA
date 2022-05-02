@@ -1,12 +1,12 @@
 package sdk
 
 import (
+	"errors"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
-// TODO: implementation
 type InstrumentsInterface interface {
 	// Метод получения расписания торгов торговых площадок.
 	TradingSchedules(exchange string, from, to *timestamp.Timestamp) ([]*pb.TradingSchedule, error)
@@ -51,7 +51,7 @@ type InstrumentsInterface interface {
 }
 
 type InstrumentsService struct {
-	client *pb.InstrumentsServiceClient
+	client pb.InstrumentsServiceClient
 }
 
 func NewInstrumentsService() *InstrumentsService {
@@ -61,5 +61,85 @@ func NewInstrumentsService() *InstrumentsService {
 	}
 
 	client := pb.NewInstrumentsServiceClient(conn)
-	return &InstrumentsService{client: &client}
+	return &InstrumentsService{client: client}
+}
+
+func (is InstrumentsService) TradingSchedules(exchange string, from, to *timestamp.Timestamp) ([]*pb.TradingSchedule, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) BondBy(filters InstrumentSearchFilters) (*pb.Bond, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) Bonds(status pb.InstrumentStatus) ([]*pb.Bond, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) GetBondCoupons(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Coupon, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) CurrencyBy(filters InstrumentSearchFilters) (*pb.Currency, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) Currencies(status pb.InstrumentStatus) ([]*pb.Currency, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) EtfBy(filters InstrumentSearchFilters) (*pb.Etf, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) Etfs(status pb.InstrumentStatus) ([]*pb.Etf, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) FutureBy(filters InstrumentSearchFilters) (*pb.Future, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) Futures(status pb.InstrumentStatus) ([]*pb.Future, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) ShareBy(filters InstrumentSearchFilters) (*pb.Share, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) Shares(status pb.InstrumentStatus) ([]*pb.Share, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) GetAccruedInterests(figi Figi, from, to *timestamp.Timestamp) ([]*pb.AccruedInterest, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) GetFuturesMargin(figi Figi) (*pb.GetFuturesMarginResponse, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) GetInstrumentBy(filters InstrumentSearchFilters) (*pb.Instrument, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) GetDividends(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Dividend, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) GetAssetBy(filters InstrumentSearchFilters) (*pb.AssetFull, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) GetAssets() ([]*pb.Asset, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) GetFavorites() ([]*pb.FavoriteInstrument, error) {
+	return nil, errors.New("method not implemented")
+}
+
+func (is InstrumentsService) EditFavorites(newFavourites *pb.EditFavoritesRequest) ([]*pb.FavoriteInstrument, error) {
+	return nil, errors.New("method not implemented")
 }
