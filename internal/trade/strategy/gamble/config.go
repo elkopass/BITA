@@ -9,11 +9,19 @@ import (
 var services = sdk.NewServicePool()
 
 type TradeConfig struct {
-	Figi           []string `required:"true"`
-	AmountToBuy    int      `split_words:"true"`
-	TakeProfitCoef float64  `split_words:"true"`
-	StopLossCoef   float64  `split_words:"true"`
-	TrendToTrade   float64  `split_words:"true"`
+	Figi []string `required:"true"`
+
+	AmountToBuy    int     `default:"1" split_words:"true"`
+	StopLossCoef   float64 `default:"0.99" split_words:"true"`
+	TakeProfitCoef float64 `default:"1.01" split_words:"true"`
+
+	LongTrendToTrade  float64 `default:"0.05" split_words:"true"`
+	ShortTrendToTrade float64 `default:"0.1" split_words:"true"`
+
+	LongTrendIntervalSeconds  int `default:"86400" split_words:"true"`
+	ShortTrendIntervalSeconds int `default:"3600" split_words:"true"`
+
+	WorkerSleepDurationSeconds int `default:"5" split_words:"true"`
 }
 
 func NewTradeConfig() *TradeConfig {
@@ -25,4 +33,3 @@ func NewTradeConfig() *TradeConfig {
 
 	return &c
 }
-

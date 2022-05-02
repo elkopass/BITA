@@ -3,7 +3,6 @@ package gamble
 import (
 	"context"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
-	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"go.uber.org/zap"
 	"sync"
 )
@@ -33,14 +32,23 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	// replace logger
 	tb.logger = tb.logger.With("account_id", accountID)
 
-	res, err := services.SandboxService.SandboxPayIn(accountID, &pb.MoneyValue{
-		Currency: "RUB",
-		Units:    1000,
-	})
-	if err != nil {
-		tb.logger.With("account_id", accountID).Errorf("can not pay in: %v", err)
-	}
-	tb.logger.Infof("account successfully replenished with %d.%d %s", res.Units, res.Nano, res.Currency)
+	//res1, err := services.SandboxService.SandboxPayIn(accountID, &pb.MoneyValue{
+	//	Currency: "RUB",
+	//	Units:    1000,
+	//})
+	//if err != nil {
+	//	tb.logger.Errorf("can not pay in: %v", err)
+	//}
+	//tb.logger.Infof("account successfully replenished with %d.%d %s", res1.Units, res1.Nano, res1.Currency)
+	//
+	//res2, err := services.SandboxService.SandboxPayIn(accountID, &pb.MoneyValue{
+	//	Currency: "USD",
+	//	Units:    100,
+	//})
+	//if err != nil {
+	//	tb.logger.Errorf("can not pay in: %v", err)
+	//}
+	//tb.logger.Infof("account successfully replenished with %d.%d %s", res2.Units, res2.Nano, res2.Currency)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(len(tb.config.Figi))
