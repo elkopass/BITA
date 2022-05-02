@@ -5,11 +5,17 @@ import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
+	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	"go.uber.org/zap"
+	"strings"
+	"sync"
+	"time"
 )
 
-type TraderStrategyConfig struct {
+var services = sdk.NewServicePool()
+
+type TradeStrategyConfig struct {
 	Figi           []string `required:"true"`
 	AmountToBuy    int      `split_words:"true"`
 	TakeProfitCoef float64  `split_words:"true"`
@@ -17,23 +23,8 @@ type TraderStrategyConfig struct {
 	TrendToTrade   float64  `split_words:"true"`
 }
 
-type TraderState struct {
-	//currentPurchasePrice  *float64
-	//currentPurchaseAmount *int
-	//lastPurchaseTime      *time.Time
-	//lastSellTime          *time.Time
-}
-
-type TraderBot struct {
-	config TraderStrategyConfig
-	state  TraderState
-	logger *zap.SugaredLogger
-
-	sandboxService sdk.SandboxService
-}
-
-func NewTraderConfig() *TraderStrategyConfig {
-	var c TraderStrategyConfig
+func NewTradeConfig() *TradeStrategyConfig {
+	var c TradeStrategyConfig
 	err := envconfig.Process("gamble_strategy", &c)
 	if err != nil {
 		loggy.GetLogger().Sugar().Fatalf("failed to process config: %v", err)
@@ -42,24 +33,66 @@ func NewTraderConfig() *TraderStrategyConfig {
 	return &c
 }
 
-func NewTraderState() *TraderState {
-	return &TraderState{}
+type TradeWorker struct {
+	ID      string
+	Figi    string
+	orderID string
+
+	logger   *zap.SugaredLogger
 }
 
-func NewTraderBot() *TraderBot {
-	return &TraderBot{
-		config: *NewTraderConfig(),
-		state:  *NewTraderState(),
-		logger: loggy.GetLogger().Sugar(),
+func NewTradeWorker(figi, accountID string) *TradeWorker {
+	id := strings.Split(uuid.New().String(), "-")[0]
 
-		sandboxService: *sdk.NewSandboxService(),
+	return &TradeWorker{
+		ID:   id,
+		Figi: figi,
+		logger: loggy.GetLogger().Sugar().
+			With("bot_id", loggy.GetBotID()).
+			With("account_id", accountID).
+			With("worker_id", id).
+			With("figi", figi),
 	}
 }
 
-func (tb TraderBot) Run(ctx context.Context) (err error) {
+func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
+	defer wg.Done()
+	tw.logger.Debug("start trading...")
+
+	for {
+		select {
+		case <-time.After(3 * time.Second):
+			orderBook, err := services.MarketDataService.GetOrderBook(sdk.Figi(tw.Figi), 1)
+			if err != nil {
+				tw.logger.Errorf("error getting orderBook: %v", err)
+				continue // just ignoring it
+			}
+
+			tw.logger.Infof("last price: %d.%d", orderBook.LastPrice.Units, orderBook.LastPrice.Nano)
+		case <-ctx.Done():
+			tw.logger.Info("worker stopped!")
+			return nil
+		}
+	}
+}
+
+type TradeBot struct {
+	config      TradeStrategyConfig
+	cancelFuncs []context.CancelFunc
+	logger      *zap.SugaredLogger
+}
+
+func NewTradeBot() *TradeBot {
+	return &TradeBot{
+		config:   *NewTradeConfig(),
+		logger:   loggy.GetLogger().Sugar().With("bot_id", loggy.GetBotID()),
+	}
+}
+
+func (tb TradeBot) Run(ctx context.Context) (err error) {
 	tb.logger.Info("starting in sandbox!")
 
-	accountID, err := tb.sandboxService.OpenSandboxAccount()
+	accountID, err := services.SandboxService.OpenSandboxAccount()
 	if err != nil {
 		tb.logger.Errorf("can not create account: %v", err)
 	}
@@ -68,7 +101,7 @@ func (tb TraderBot) Run(ctx context.Context) (err error) {
 	// replace logger
 	tb.logger = tb.logger.With("account_id", accountID)
 
-	res, err := tb.sandboxService.SandboxPayIn(accountID, &pb.MoneyValue{
+	res, err := services.SandboxService.SandboxPayIn(accountID, &pb.MoneyValue{
 		Currency: "RUB",
 		Units:    1000,
 	})
@@ -77,9 +110,32 @@ func (tb TraderBot) Run(ctx context.Context) (err error) {
 	}
 	tb.logger.Infof("account successfully replenished with %d.%d %s", res.Units, res.Nano, res.Currency)
 
+	wg := &sync.WaitGroup{}
+	wg.Add(len(tb.config.Figi))
+
+	for _, f := range tb.config.Figi {
+		workerCtx, cancel := context.WithCancel(context.Background())
+
+		w := NewTradeWorker(f, string(accountID))
+		tb.cancelFuncs = append(tb.cancelFuncs, cancel)
+
+		go func() {
+			err = w.Run(workerCtx, wg)
+			if err != nil {
+				tb.logger.Errorf("worker finished with error: %v", err)
+			}
+		}()
+	}
+
 	<-ctx.Done()
 
-	err = tb.sandboxService.CloseSandboxAccount(accountID)
+	for _, cancel := range tb.cancelFuncs {
+		cancel()
+	}
+
+	wg.Wait()
+
+	err = services.SandboxService.CloseSandboxAccount(accountID)
 	if err != nil {
 		tb.logger.Errorf("can't create account: %v", err)
 	}

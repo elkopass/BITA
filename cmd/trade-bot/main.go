@@ -34,7 +34,7 @@ func main() {
 
 	switch cnf.Strategy {
 	case strategy.GAMBLE:
-		bot = gamble.NewTraderBot()
+		bot = gamble.NewTradeBot()
 	default:
 		log.Fatalf("unknown strategy '%s'", cnf.Strategy)
 		return
@@ -52,7 +52,7 @@ func main() {
 		}
 
 		go func() {
-			log.Info("listening on %s", metrics.Addr)
+			log.Infof("listening on %s", metrics.Addr)
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("listen failed: %+s\n", err)
 			}

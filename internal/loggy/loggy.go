@@ -12,9 +12,9 @@ var logger *zap.Logger
 
 var (
 	botID = strings.Split(uuid.New().String(), "-")[0]
-	//GetBotID = func() string {
-	//	return botID
-	//}
+	GetBotID = func() string {
+		return botID
+	}
 )
 
 func init() {

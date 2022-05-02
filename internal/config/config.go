@@ -11,7 +11,6 @@ const (
 	AppName = "elkopass.TinkoffInvestRobotContest"
 
 	DefaultRequestTimeout   = 30 * time.Second
-	// GracefulShutdownTimeout = 60 * time.Second
 )
 
 type tradeBotConfig struct {
