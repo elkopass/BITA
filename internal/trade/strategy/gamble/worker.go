@@ -3,6 +3,7 @@ package gamble
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
@@ -102,6 +103,7 @@ func (tw TradeWorker) orderIsPlaced() bool {
 
 func (tw *TradeWorker) checkInstrument() {
 	orderBook, err := services.MarketDataService.GetOrderBook(sdk.Figi(tw.Figi), 1)
+
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
 		return // just ignoring it
@@ -116,14 +118,57 @@ func (tw *TradeWorker) checkInstrument() {
 }
 
 func (tw *TradeWorker) tryToSellInstrument() {
-	tw.logger.Info("not implemented")
+	trendIsOK, err := tw.trendIsOK()
+	if !trendIsOK {
+		return // wait for the next turn
+	}
+
+	orderBook, err := services.MarketDataService.GetOrderBook(sdk.Figi(tw.Figi), 10)
+	if err != nil {
+		tw.logger.Errorf("error getting order book: %v", err)
+		return // just ignoring it
+	}
+	tw.logger.Infof("last price: %d.%d, close price: %d.%d, limit up: %d.%d, limit down: %d.%d",
+		orderBook.LastPrice.Units, orderBook.LastPrice.Nano,
+		orderBook.ClosePrice.Units, orderBook.ClosePrice.Nano,
+		orderBook.LimitUp.Units, orderBook.LimitUp.Nano,
+		orderBook.LimitDown.Units, orderBook.LimitDown.Nano,
+	)
+
+	order, err := services.SandboxService.PostSandboxOrder(
+		&pb.PostOrderRequest{
+			Figi:      tw.Figi,
+			OrderId:   uuid.New().String(),
+			Quantity:  int64(tw.config.AmountToBuy),
+			Price:     orderBook.LastPrice,
+			AccountId: tw.accountID,
+			OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
+			Direction: pb.OrderDirection_ORDER_DIRECTION_SELL,
+		},
+	)
+	if err != nil {
+		tw.logger.Errorf("can not post order: %v", err)
+		return // nothing bad happened, let's proceed
+	}
+
+	tw.orderID = order.OrderId
+	tw.logger.With("order_id", tw.orderID).
+		Infof("order created, current status: %s", order.ExecutionReportStatus.String())
 }
+
 
 func (tw *TradeWorker) tryToBuyInstrument() {
 	trendIsOK, err := tw.trendIsOK()
 	if !trendIsOK {
 		return // wait for the next turn
 	}
+
+	portfolio, err := services.OperationsService.GetPortfolio(sdk.AccountID(tw.accountID))
+	if err != nil {
+		tw.logger.Errorf("error getting order book: %v", err)
+		return // just ignoring it
+	}
+	fmt.Print(portfolio)
 
 	orderBook, err := services.MarketDataService.GetOrderBook(sdk.Figi(tw.Figi), 10)
 	if err != nil {
