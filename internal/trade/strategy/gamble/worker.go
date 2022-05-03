@@ -3,7 +3,6 @@ package gamble
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
@@ -49,7 +48,7 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 	for {
 		select {
 		case <-time.After(time.Duration(tw.config.WorkerSleepDurationSeconds) * time.Second):
-			if !tw.tradingStatusIsOK() {
+			if !tw.tradingStatusIsOkToTrade() {
 				continue // just skip
 			}
 
@@ -70,11 +69,20 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 	}
 }
 
-func (tw *TradeWorker) reloadPositions() {
-	tw.logger.Info("not implemented")
+func (tw *TradeWorker) checkPortfolio() {
+	portfolio, err := services.SandboxService.GetSandboxPortfolio(sdk.AccountID(tw.accountID))
+	if err != nil {
+		tw.logger.Errorf("error getting order book: %v", err)
+		return // just ignoring it
+	}
+
+	tw.logger.Info("positions: ", getFormattedPositions(portfolio.Positions))
+	if portfolio.ExpectedYield != nil {
+		tw.logger.Infof("expected yield: %d.%d", portfolio.ExpectedYield.Units, portfolio.ExpectedYield.Nano)
+	}
 }
 
-func (tw TradeWorker) orderIsPlaced() bool {
+func (tw *TradeWorker) orderIsPlaced() bool {
 	state, err := services.SandboxService.GetSandboxOrderState(sdk.AccountID(tw.accountID), sdk.OrderID(tw.orderID))
 	if err != nil {
 		tw.logger.With("order_id", tw.orderID).Errorf("can not check order state: %v", err)
@@ -98,12 +106,17 @@ func (tw TradeWorker) orderIsPlaced() bool {
 		return true
 	}
 
+	tw.logger.With("order_id", tw.orderID).
+		Infof("execution status: %s", state.ExecutionReportStatus)
+	tw.orderID = ""
+
+	tw.checkPortfolio()
+
 	return false
 }
 
 func (tw *TradeWorker) checkInstrument() {
 	orderBook, err := services.MarketDataService.GetOrderBook(sdk.Figi(tw.Figi), 1)
-
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
 		return // just ignoring it
@@ -118,8 +131,13 @@ func (tw *TradeWorker) checkInstrument() {
 }
 
 func (tw *TradeWorker) tryToSellInstrument() {
-	trendIsOK, err := tw.trendIsOK()
-	if !trendIsOK {
+	priceIsOK, err := tw.priceIsOkToSell()
+	if err != nil {
+		tw.logger.Errorf("error getting price: %v", err)
+		return // just ignore
+	}
+	if !priceIsOK {
+		tw.logger.Debug("price is not OK to sell")
 		return // wait for the next turn
 	}
 
@@ -147,28 +165,22 @@ func (tw *TradeWorker) tryToSellInstrument() {
 		},
 	)
 	if err != nil {
-		tw.logger.Errorf("can not post order: %v", err)
+		tw.logger.Errorf("can not post sell order: %v", err)
 		return // nothing bad happened, let's proceed
 	}
 
 	tw.orderID = order.OrderId
 	tw.logger.With("order_id", tw.orderID).
-		Infof("order created, current status: %s", order.ExecutionReportStatus.String())
+		Infof("sell order created, current status: %s", order.ExecutionReportStatus.String())
+
+	tw.checkPortfolio()
 }
 
-
 func (tw *TradeWorker) tryToBuyInstrument() {
-	trendIsOK, err := tw.trendIsOK()
+	trendIsOK, err := tw.trendIsOkToBuy()
 	if !trendIsOK {
 		return // wait for the next turn
 	}
-
-	portfolio, err := services.OperationsService.GetPortfolio(sdk.AccountID(tw.accountID))
-	if err != nil {
-		tw.logger.Errorf("error getting order book: %v", err)
-		return // just ignoring it
-	}
-	fmt.Print(portfolio)
 
 	orderBook, err := services.MarketDataService.GetOrderBook(sdk.Figi(tw.Figi), 10)
 	if err != nil {
@@ -194,16 +206,16 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 		},
 	)
 	if err != nil {
-		tw.logger.Errorf("can not post order: %v", err)
+		tw.logger.Errorf("can not post buy order: %v", err)
 		return // nothing bad happened, let's proceed
 	}
 
 	tw.orderID = order.OrderId
 	tw.logger.With("order_id", tw.orderID).
-		Infof("order created, current status: %s", order.ExecutionReportStatus.String())
+		Infof("buy order created, current status: %s", order.ExecutionReportStatus.String())
 }
 
-func (tw TradeWorker) tradingStatusIsOK() bool {
+func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
 	status, err := services.MarketDataService.GetTradingStatus(sdk.Figi(tw.Figi))
 	if err != nil {
 		tw.logger.Errorf("error getting trading status: %v", err)
@@ -218,7 +230,7 @@ func (tw TradeWorker) tradingStatusIsOK() bool {
 	return false
 }
 
-func (tw *TradeWorker) trendIsOK() (bool, error) {
+func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 	shortCandles, err := services.MarketDataService.GetCandles(
 		sdk.Figi(tw.Figi),
 		timestamppb.New(time.Now().Add(-time.Duration(tw.config.ShortTrendIntervalSeconds)*time.Second)),
@@ -265,4 +277,9 @@ func (tw *TradeWorker) trendIsOK() (bool, error) {
 	}
 
 	return false, nil
+}
+
+func (tw *TradeWorker) priceIsOkToSell() (bool, error) {
+	// TODO: implementation
+	return true, nil
 }
