@@ -186,7 +186,7 @@ func (tw *TradeWorker) tryToSellInstrument() {
 }
 
 func (tw *TradeWorker) tryToBuyInstrument() {
-	trendIsOK, err := tw.trendIsOkToBuy()
+	trendIsOK, _ := tw.trendIsOkToBuy()
 	if !trendIsOK {
 		return // wait for the next turn
 	}
@@ -232,11 +232,7 @@ func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
 	}
 
 	tw.logger.Infof("trading status: %s", status.TradingStatus.String())
-	if status.TradingStatus == pb.SecurityTradingStatus_SECURITY_TRADING_STATUS_NORMAL_TRADING {
-		return true
-	}
-
-	return false
+	return status.TradingStatus == pb.SecurityTradingStatus_SECURITY_TRADING_STATUS_NORMAL_TRADING
 }
 
 func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {

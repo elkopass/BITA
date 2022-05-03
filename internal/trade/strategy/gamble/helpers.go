@@ -31,19 +31,19 @@ func candlesToTimeSeries(candles []*pb.HistoricCandle) *techan.TimeSeries {
 	return &techan.TimeSeries{Candles: techanCandles}
 }
 
-func getFormattedCandles(candles []*pb.HistoricCandle) string {
-	formattedCandles := ""
-	for _, c := range candles {
-		formattedCandles += fmt.Sprintf(
-			"(%s) %d.%d",
-			c.Time.AsTime().String(),
-			c.Close.Units,
-			c.Close.Nano,
-		)
-	}
-
-	return formattedCandles
-}
+//func getFormattedCandles(candles []*pb.HistoricCandle) string {
+//	formattedCandles := ""
+//	for _, c := range candles {
+//		formattedCandles += fmt.Sprintf(
+//			"(%s) %d.%d",
+//			c.Time.AsTime().String(),
+//			c.Close.Units,
+//			c.Close.Nano,
+//		)
+//	}
+//
+//	return formattedCandles
+//}
 
 func getFormattedPositions(positions []*pb.PortfolioPosition) string {
 	formattedPositions := ""
