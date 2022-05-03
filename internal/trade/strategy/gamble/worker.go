@@ -21,6 +21,8 @@ type TradeWorker struct {
 	orderID   string
 	accountID string
 
+	sellFlag bool // if true, bot is trying to sell his assets
+
 	logger *zap.SugaredLogger
 	config TradeConfig
 }
@@ -33,6 +35,7 @@ func NewTradeWorker(figi, accountID string) *TradeWorker {
 		Figi:      figi,
 		accountID: accountID,
 		config:    *NewTradeConfig(),
+		sellFlag:  false,
 		logger: loggy.GetLogger().Sugar().
 			With("bot_id", loggy.GetBotID()).
 			With("account_id", accountID).
@@ -43,6 +46,8 @@ func NewTradeWorker(figi, accountID string) *TradeWorker {
 
 func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 	defer wg.Done()
+
+	tw.logger = tw.logger.With("sell_flag", tw.sellFlag)
 	tw.logger.Debug("start trading...")
 
 	for {
@@ -53,12 +58,19 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 			}
 
 			if tw.orderID != "" {
-				if tw.orderIsPlaced() {
+				if tw.orderIsFulfilled() {
+					tw.orderID = ""
+					tw.sellFlag = !tw.sellFlag
+					tw.checkPortfolio()
+				} else {
 					tw.logger.With("order_id", tw.orderID).Debug("order is still placed")
 					tw.checkInstrument()
-				} else {
-					tw.tryToSellInstrument()
 				}
+				continue
+			}
+
+			if tw.sellFlag {
+				tw.tryToSellInstrument()
 			} else {
 				tw.tryToBuyInstrument()
 			}
@@ -82,11 +94,11 @@ func (tw *TradeWorker) checkPortfolio() {
 	}
 }
 
-func (tw *TradeWorker) orderIsPlaced() bool {
+func (tw *TradeWorker) orderIsFulfilled() bool {
 	state, err := services.SandboxService.GetSandboxOrderState(sdk.AccountID(tw.accountID), sdk.OrderID(tw.orderID))
 	if err != nil {
 		tw.logger.With("order_id", tw.orderID).Errorf("can not check order state: %v", err)
-		return true
+		return false
 	}
 
 	tw.logger.With("order_id", tw.orderID).
@@ -99,20 +111,18 @@ func (tw *TradeWorker) orderIsPlaced() bool {
 			state.AveragePositionPrice.Currency,
 		)
 
-	if state.ExecutionReportStatus == pb.OrderExecutionReportStatus_EXECUTION_REPORT_STATUS_NEW {
-		return true
-	}
-	if state.ExecutionReportStatus == pb.OrderExecutionReportStatus_EXECUTION_REPORT_STATUS_PARTIALLYFILL {
-		return true
-	}
-
 	tw.logger.With("order_id", tw.orderID).
 		Infof("execution status: %s", state.ExecutionReportStatus)
-	tw.orderID = ""
 
-	tw.checkPortfolio()
+	if state.ExecutionReportStatus == pb.OrderExecutionReportStatus_EXECUTION_REPORT_STATUS_NEW {
+		return false
+	}
+	if state.ExecutionReportStatus == pb.OrderExecutionReportStatus_EXECUTION_REPORT_STATUS_PARTIALLYFILL {
+		return false
+	}
 
-	return false
+	// all another cases are OK to place a new order
+	return true
 }
 
 func (tw *TradeWorker) checkInstrument() {
