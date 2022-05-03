@@ -10,35 +10,35 @@ type InstrumentsInterface interface {
 	// Метод получения расписания торгов торговых площадок.
 	TradingSchedules(exchange string, from, to *timestamp.Timestamp) ([]*pb.TradingSchedule, error)
 	// Метод получения облигации по её идентификатору.
-	BondBy(filters InstrumentSearchFilters) (*pb.Bond, error)
+	BondBy(filters pb.InstrumentRequest) (*pb.Bond, error)
 	// Метод получения списка облигаций.
 	Bonds(status pb.InstrumentStatus) ([]*pb.Bond, error)
 	// Метод получения графика выплат купонов по облигации
-	GetBondCoupons(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Coupon, error)
+	GetBondCoupons(figi string, from, to *timestamp.Timestamp) ([]*pb.Coupon, error)
 	// Метод получения валюты по её идентификатору.
-	CurrencyBy(filters InstrumentSearchFilters) (*pb.Currency, error)
+	CurrencyBy(filters pb.InstrumentRequest) (*pb.Currency, error)
 	// Метод получения списка валют.
 	Currencies(status pb.InstrumentStatus) ([]*pb.Currency, error)
 	// Метод получения инвестиционного фонда по его идентификатору.
-	EtfBy(filters InstrumentSearchFilters) (*pb.Etf, error)
+	EtfBy(filters pb.InstrumentRequest) (*pb.Etf, error)
 	// Метод получения списка инвестиционных фондов.
 	Etfs(status pb.InstrumentStatus) ([]*pb.Etf, error)
 	// Метод получения фьючерса по его идентификатору.
-	FutureBy(filters InstrumentSearchFilters) (*pb.Future, error)
+	FutureBy(filters pb.InstrumentRequest) (*pb.Future, error)
 	// Метод получения списка фьючерсов.
 	Futures(status pb.InstrumentStatus) ([]*pb.Future, error)
 	// Метод получения акции по её идентификатору.
-	ShareBy(filters InstrumentSearchFilters) (*pb.Share, error)
+	ShareBy(filters pb.InstrumentRequest) (*pb.Share, error)
 	// Метод получения списка акций.
 	Shares(status pb.InstrumentStatus) ([]*pb.Share, error)
 	// Метод получения накопленного купонного дохода по облигации.
-	GetAccruedInterests(figi Figi, from, to *timestamp.Timestamp) ([]*pb.AccruedInterest, error)
+	GetAccruedInterests(figi string, from, to *timestamp.Timestamp) ([]*pb.AccruedInterest, error)
 	// Метод получения размера гарантийного обеспечения по фьючерсам.
-	GetFuturesMargin(figi Figi) (*pb.GetFuturesMarginResponse, error)
+	GetFuturesMargin(figi string) (*pb.GetFuturesMarginResponse, error)
 	// Метод получения основной информации об инструменте.
-	GetInstrumentBy(filters InstrumentSearchFilters) (*pb.Instrument, error)
+	GetInstrumentBy(filters pb.InstrumentRequest) (*pb.Instrument, error)
 	// Метод для получения событий выплаты дивидендов по инструменту.
-	GetDividends(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Dividend, error)
+	GetDividends(figi string, from, to *timestamp.Timestamp) ([]*pb.Dividend, error)
 	// Метод получения актива по его идентификатору.
 	GetAssetBy(assetID string) (*pb.AssetFull, error)
 	// Метод получения списка активов.
@@ -79,15 +79,11 @@ func (is InstrumentsService) TradingSchedules(exchange string, from, to *timesta
 	return res.Exchanges, nil
 }
 
-func (is InstrumentsService) BondBy(filters InstrumentSearchFilters) (*pb.Bond, error) {
+func (is InstrumentsService) BondBy(filters pb.InstrumentRequest) (*pb.Bond, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
-	res, err := is.client.BondBy(ctx, &pb.InstrumentRequest{
-		IdType:    filters.IdType,
-		ClassCode: filters.ClassCode,
-		Id:        filters.Id,
-	})
+	res, err := is.client.BondBy(ctx, &filters)
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +105,12 @@ func (is InstrumentsService) Bonds(status pb.InstrumentStatus) ([]*pb.Bond, erro
 	return res.Instruments, nil
 }
 
-func (is InstrumentsService) GetBondCoupons(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Coupon, error) {
+func (is InstrumentsService) GetBondCoupons(figi string, from, to *timestamp.Timestamp) ([]*pb.Coupon, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := is.client.GetBondCoupons(ctx, &pb.GetBondCouponsRequest{
-		Figi: string(figi),
+		Figi: figi,
 		From: from,
 		To: to,
 	})
@@ -125,15 +121,11 @@ func (is InstrumentsService) GetBondCoupons(figi Figi, from, to *timestamp.Times
 	return res.Events, nil
 }
 
-func (is InstrumentsService) CurrencyBy(filters InstrumentSearchFilters) (*pb.Currency, error) {
+func (is InstrumentsService) CurrencyBy(filters pb.InstrumentRequest) (*pb.Currency, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
-	res, err := is.client.CurrencyBy(ctx, &pb.InstrumentRequest{
-		IdType:    filters.IdType,
-		ClassCode: filters.ClassCode,
-		Id:        filters.Id,
-	})
+	res, err := is.client.CurrencyBy(ctx, &filters)
 	if err != nil {
 		return nil, err
 	}
@@ -155,15 +147,11 @@ func (is InstrumentsService) Currencies(status pb.InstrumentStatus) ([]*pb.Curre
 	return res.Instruments, nil
 }
 
-func (is InstrumentsService) EtfBy(filters InstrumentSearchFilters) (*pb.Etf, error) {
+func (is InstrumentsService) EtfBy(filters pb.InstrumentRequest) (*pb.Etf, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
-	res, err := is.client.EtfBy(ctx, &pb.InstrumentRequest{
-		IdType:    filters.IdType,
-		ClassCode: filters.ClassCode,
-		Id:        filters.Id,
-	})
+	res, err := is.client.EtfBy(ctx, &filters)
 	if err != nil {
 		return nil, err
 	}
@@ -185,15 +173,11 @@ func (is InstrumentsService) Etfs(status pb.InstrumentStatus) ([]*pb.Etf, error)
 	return res.Instruments, nil
 }
 
-func (is InstrumentsService) FutureBy(filters InstrumentSearchFilters) (*pb.Future, error) {
+func (is InstrumentsService) FutureBy(filters pb.InstrumentRequest) (*pb.Future, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
-	res, err := is.client.FutureBy(ctx, &pb.InstrumentRequest{
-		IdType:    filters.IdType,
-		ClassCode: filters.ClassCode,
-		Id:        filters.Id,
-	})
+	res, err := is.client.FutureBy(ctx, &filters)
 	if err != nil {
 		return nil, err
 	}
@@ -215,15 +199,11 @@ func (is InstrumentsService) Futures(status pb.InstrumentStatus) ([]*pb.Future, 
 	return res.Instruments, nil
 }
 
-func (is InstrumentsService) ShareBy(filters InstrumentSearchFilters) (*pb.Share, error) {
+func (is InstrumentsService) ShareBy(filters pb.InstrumentRequest) (*pb.Share, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
-	res, err := is.client.ShareBy(ctx, &pb.InstrumentRequest{
-		IdType:    filters.IdType,
-		ClassCode: filters.ClassCode,
-		Id:        filters.Id,
-	})
+	res, err := is.client.ShareBy(ctx, &filters)
 	if err != nil {
 		return nil, err
 	}
@@ -245,12 +225,12 @@ func (is InstrumentsService) Shares(status pb.InstrumentStatus) ([]*pb.Share, er
 	return res.Instruments, nil
 }
 
-func (is InstrumentsService) GetAccruedInterests(figi Figi, from, to *timestamp.Timestamp) ([]*pb.AccruedInterest, error) {
+func (is InstrumentsService) GetAccruedInterests(figi string, from, to *timestamp.Timestamp) ([]*pb.AccruedInterest, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := is.client.GetAccruedInterests(ctx, &pb.GetAccruedInterestsRequest{
-		Figi: string(figi),
+		Figi: figi,
 		From: from,
 		To: to,
 	})
@@ -261,12 +241,12 @@ func (is InstrumentsService) GetAccruedInterests(figi Figi, from, to *timestamp.
 	return res.AccruedInterests, nil
 }
 
-func (is InstrumentsService) GetFuturesMargin(figi Figi) (*pb.GetFuturesMarginResponse, error) {
+func (is InstrumentsService) GetFuturesMargin(figi string) (*pb.GetFuturesMarginResponse, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := is.client.GetFuturesMargin(ctx, &pb.GetFuturesMarginRequest{
-		Figi: string(figi),
+		Figi: figi,
 	})
 	if err != nil {
 		return nil, err
@@ -275,15 +255,11 @@ func (is InstrumentsService) GetFuturesMargin(figi Figi) (*pb.GetFuturesMarginRe
 	return res, nil
 }
 
-func (is InstrumentsService) GetInstrumentBy(filters InstrumentSearchFilters) (*pb.Instrument, error) {
+func (is InstrumentsService) GetInstrumentBy(filters pb.InstrumentRequest) (*pb.Instrument, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
-	res, err := is.client.GetInstrumentBy(ctx, &pb.InstrumentRequest{
-		IdType:    filters.IdType,
-		ClassCode: filters.ClassCode,
-		Id:        filters.Id,
-	})
+	res, err := is.client.GetInstrumentBy(ctx, &filters)
 	if err != nil {
 		return nil, err
 	}
@@ -291,12 +267,12 @@ func (is InstrumentsService) GetInstrumentBy(filters InstrumentSearchFilters) (*
 	return res.Instrument, nil
 }
 
-func (is InstrumentsService) GetDividends(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Dividend, error) {
+func (is InstrumentsService) GetDividends(figi string, from, to *timestamp.Timestamp) ([]*pb.Dividend, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := is.client.GetDividends(ctx, &pb.GetDividendsRequest{
-		Figi: string(figi),
+		Figi: figi,
 		From: from,
 		To: to,
 	})

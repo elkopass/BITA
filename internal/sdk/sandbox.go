@@ -8,27 +8,27 @@ import (
 
 type SandboxInterface interface {
 	// Метод регистрации счёта в песочнице.
-	OpenSandboxAccount() (AccountID, error)
+	OpenSandboxAccount() (string, error)
 	// Метод получения счетов в песочнице.
 	GetSandboxAccounts() ([]*pb.Account, error)
 	// Метод закрытия счёта в песочнице.
-	CloseSandboxAccount(accountID AccountID) error
+	CloseSandboxAccount(accountID string) error
 	// Метод выставления торгового поручения в песочнице.
 	PostSandboxOrder(order *pb.PostOrderRequest) (*pb.PostOrderResponse, error)
 	// Метод получения списка активных заявок по счёту в песочнице.
-	GetSandboxOrders(accountID AccountID) ([]*pb.OrderState, error)
+	GetSandboxOrders(accountID string) ([]*pb.OrderState, error)
 	// Метод отмены торгового поручения в песочнице.
-	CancelSandboxOrder(accountID AccountID, orderID OrderID) (*timestamp.Timestamp, error)
+	CancelSandboxOrder(accountID string, orderID string) (*timestamp.Timestamp, error)
 	// Метод получения статуса заявки в песочнице.
-	GetSandboxOrderState(accountID AccountID, orderID OrderID) (*pb.OrderState, error)
+	GetSandboxOrderState(accountID string, orderID string) (*pb.OrderState, error)
 	// Метод получения позиций по виртуальному счёту песочницы.
-	GetSandboxPositions(accountID AccountID) (*pb.PositionsResponse, error)
+	GetSandboxPositions(accountID string) (*pb.PositionsResponse, error)
 	// Метод получения операций в песочнице по номеру счёта.
-	GetSandboxOperations(filter *OperationsSearchFilters) ([]*pb.Operation, error)
+	GetSandboxOperations(filter *pb.OperationsRequest) ([]*pb.Operation, error)
 	// Метод получения портфолио в песочнице.
-	GetSandboxPortfolio(accountID AccountID) (*pb.PortfolioResponse, error)
+	GetSandboxPortfolio(accountID string) (*pb.PortfolioResponse, error)
 	// Метод пополнения счёта в песочнице.
-	SandboxPayIn(accountID AccountID, amount *pb.MoneyValue) (*pb.MoneyValue, error)
+	SandboxPayIn(accountID string, amount *pb.MoneyValue) (*pb.MoneyValue, error)
 }
 
 type SandboxService struct {
@@ -45,7 +45,7 @@ func NewSandboxService() *SandboxService {
 	return &SandboxService{client: client}
 }
 
-func (ss SandboxService) OpenSandboxAccount() (AccountID, error) {
+func (ss SandboxService) OpenSandboxAccount() (string, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
@@ -54,7 +54,7 @@ func (ss SandboxService) OpenSandboxAccount() (AccountID, error) {
 		return "", err
 	}
 
-	return AccountID(res.AccountId), nil
+	return string(res.AccountId), nil
 }
 
 func (ss SandboxService) GetSandboxAccounts() ([]*pb.Account, error) {
@@ -69,12 +69,12 @@ func (ss SandboxService) GetSandboxAccounts() ([]*pb.Account, error) {
 	return res.Accounts, nil
 }
 
-func (ss SandboxService) CloseSandboxAccount(accountID AccountID) error {
+func (ss SandboxService) CloseSandboxAccount(accountID string) error {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	_, err := ss.client.CloseSandboxAccount(ctx, &pb.CloseSandboxAccountRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 	})
 	return err
 }
@@ -91,12 +91,12 @@ func (ss SandboxService) PostSandboxOrder(order *pb.PostOrderRequest) (*pb.PostO
 	return res, nil
 }
 
-func (ss SandboxService) GetSandboxOrders(accountID AccountID) ([]*pb.OrderState, error) {
+func (ss SandboxService) GetSandboxOrders(accountID string) ([]*pb.OrderState, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := ss.client.GetSandboxOrders(ctx, &pb.GetOrdersRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 	})
 	if err != nil {
 		return nil, err
@@ -105,13 +105,13 @@ func (ss SandboxService) GetSandboxOrders(accountID AccountID) ([]*pb.OrderState
 	return res.Orders, nil
 }
 
-func (ss SandboxService) CancelSandboxOrder(accountID AccountID, orderID OrderID) (*timestamp.Timestamp, error) {
+func (ss SandboxService) CancelSandboxOrder(accountID string, orderID string) (*timestamp.Timestamp, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := ss.client.CancelSandboxOrder(ctx, &pb.CancelOrderRequest{
-		AccountId: string(accountID),
-		OrderId:   string(orderID),
+		AccountId: accountID,
+		OrderId:   orderID,
 	})
 	if err != nil {
 		return nil, err
@@ -120,13 +120,13 @@ func (ss SandboxService) CancelSandboxOrder(accountID AccountID, orderID OrderID
 	return res.Time, nil
 }
 
-func (ss SandboxService) GetSandboxOrderState(accountID AccountID, orderID OrderID) (*pb.OrderState, error) {
+func (ss SandboxService) GetSandboxOrderState(accountID string, orderID string) (*pb.OrderState, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := ss.client.GetSandboxOrderState(ctx, &pb.GetOrderStateRequest{
-		AccountId: string(accountID),
-		OrderId:   string(orderID),
+		AccountId: accountID,
+		OrderId:   orderID,
 	})
 	if err != nil {
 		return nil, err
@@ -135,12 +135,12 @@ func (ss SandboxService) GetSandboxOrderState(accountID AccountID, orderID Order
 	return res, nil
 }
 
-func (ss SandboxService) GetSandboxPositions(accountID AccountID) (*pb.PositionsResponse, error) {
+func (ss SandboxService) GetSandboxPositions(accountID string) (*pb.PositionsResponse, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := ss.client.GetSandboxPositions(ctx, &pb.PositionsRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 	})
 	if err != nil {
 		return nil, err
@@ -149,17 +149,11 @@ func (ss SandboxService) GetSandboxPositions(accountID AccountID) (*pb.Positions
 	return res, nil
 }
 
-func (ss SandboxService) GetSandboxOperations(filter *OperationsSearchFilters) ([]*pb.Operation, error) {
+func (ss SandboxService) GetSandboxOperations(filter *pb.OperationsRequest) ([]*pb.Operation, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
-	res, err := ss.client.GetSandboxOperations(ctx, &pb.OperationsRequest{
-		AccountId: filter.AccountId,
-		From:      filter.From,
-		To:        filter.To,
-		State:     filter.State,
-		Figi:      filter.Figi,
-	})
+	res, err := ss.client.GetSandboxOperations(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -167,12 +161,12 @@ func (ss SandboxService) GetSandboxOperations(filter *OperationsSearchFilters) (
 	return res.Operations, nil
 }
 
-func (ss SandboxService) GetSandboxPortfolio(accountID AccountID) (*pb.PortfolioResponse, error) {
+func (ss SandboxService) GetSandboxPortfolio(accountID string) (*pb.PortfolioResponse, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := ss.client.GetSandboxPortfolio(ctx, &pb.PortfolioRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 	})
 	if err != nil {
 		return nil, err
@@ -181,12 +175,12 @@ func (ss SandboxService) GetSandboxPortfolio(accountID AccountID) (*pb.Portfolio
 	return res, nil
 }
 
-func (ss SandboxService) SandboxPayIn(accountID AccountID, amount *pb.MoneyValue) (*pb.MoneyValue, error) {
+func (ss SandboxService) SandboxPayIn(accountID string, amount *pb.MoneyValue) (*pb.MoneyValue, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := ss.client.SandboxPayIn(ctx, &pb.SandboxPayInRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 		Amount:    amount,
 	})
 	if err != nil {

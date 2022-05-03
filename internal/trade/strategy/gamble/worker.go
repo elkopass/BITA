@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
 	"github.com/google/uuid"
 	"github.com/sdcoffey/techan"
 	"go.uber.org/zap"
@@ -82,7 +81,7 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 }
 
 func (tw *TradeWorker) checkPortfolio() {
-	portfolio, err := services.SandboxService.GetSandboxPortfolio(sdk.AccountID(tw.accountID))
+	portfolio, err := services.SandboxService.GetSandboxPortfolio(tw.accountID)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
 		return // just ignoring it
@@ -95,7 +94,7 @@ func (tw *TradeWorker) checkPortfolio() {
 }
 
 func (tw *TradeWorker) orderIsFulfilled() bool {
-	state, err := services.SandboxService.GetSandboxOrderState(sdk.AccountID(tw.accountID), sdk.OrderID(tw.orderID))
+	state, err := services.SandboxService.GetSandboxOrderState(tw.accountID, tw.orderID)
 	if err != nil {
 		tw.logger.With("order_id", tw.orderID).Errorf("can not check order state: %v", err)
 		return false
@@ -126,7 +125,7 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 }
 
 func (tw *TradeWorker) checkInstrument() {
-	orderBook, err := services.MarketDataService.GetOrderBook(sdk.Figi(tw.Figi), 1)
+	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 1)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
 		return // just ignoring it
@@ -151,7 +150,7 @@ func (tw *TradeWorker) tryToSellInstrument() {
 		return // wait for the next turn
 	}
 
-	orderBook, err := services.MarketDataService.GetOrderBook(sdk.Figi(tw.Figi), 10)
+	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
 		return // just ignoring it
@@ -192,7 +191,7 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 		return // wait for the next turn
 	}
 
-	orderBook, err := services.MarketDataService.GetOrderBook(sdk.Figi(tw.Figi), 10)
+	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
 		return // just ignoring it
@@ -226,7 +225,7 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 }
 
 func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
-	status, err := services.MarketDataService.GetTradingStatus(sdk.Figi(tw.Figi))
+	status, err := services.MarketDataService.GetTradingStatus(tw.Figi)
 	if err != nil {
 		tw.logger.Errorf("error getting trading status: %v", err)
 		return false
@@ -242,7 +241,7 @@ func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
 
 func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 	shortCandles, err := services.MarketDataService.GetCandles(
-		sdk.Figi(tw.Figi),
+		tw.Figi,
 		timestamppb.New(time.Now().Add(-time.Duration(tw.config.ShortTrendIntervalSeconds)*time.Second)),
 		timestamppb.Now(),
 		pb.CandleInterval_CANDLE_INTERVAL_1_MIN,
@@ -252,7 +251,7 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 	}
 
 	longCandles, err := services.MarketDataService.GetCandles(
-		sdk.Figi(tw.Figi),
+		tw.Figi,
 		timestamppb.New(time.Now().Add(-time.Duration(tw.config.LongTrendIntervalSeconds)*time.Second)),
 		timestamppb.Now(),
 		pb.CandleInterval_CANDLE_INTERVAL_5_MIN,

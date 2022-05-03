@@ -9,7 +9,7 @@ type UsersServiceClient interface {
 	// Метод получения счетов пользователя.
 	GetAccounts() ([]*pb.Account, error)
 	// Расчёт маржинальных показателей по счёту.
-	GetMarginAttributes(accountID AccountID) (*pb.GetMarginAttributesResponse, error)
+	GetMarginAttributes(accountID string) (*pb.GetMarginAttributesResponse, error)
 	// Запрос тарифа пользователя.
 	GetUserTariff() (*pb.GetUserTariffResponse, error)
 	// Метод получения информации о пользователе.
@@ -42,12 +42,12 @@ func (us UsersService) GetAccounts() ([]*pb.Account, error) {
 	return res.Accounts, nil
 }
 
-func (us UsersService) GetMarginAttributes(accountID AccountID) (*pb.GetMarginAttributesResponse, error) {
+func (us UsersService) GetMarginAttributes(accountID string) (*pb.GetMarginAttributesResponse, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := us.client.GetMarginAttributes(ctx, &pb.GetMarginAttributesRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 	})
 	if err != nil {
 		return nil, err

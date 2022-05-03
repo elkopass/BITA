@@ -8,13 +8,13 @@ import (
 
 type OperationsInterface interface {
 	// Метод получения списка операций по счёту.
-	GetOperations(accountID AccountID, from, to *timestamp.Timestamp, state pb.OperationState, figi Figi) ([]*pb.Operation, error)
+	GetOperations(accountID string, from, to *timestamp.Timestamp, state pb.OperationState, figi string) ([]*pb.Operation, error)
 	// Метод получения портфеля по счёту.
-	GetPortfolio(accountID AccountID) (*pb.PortfolioResponse, error)
+	GetPortfolio(accountID string) (*pb.PortfolioResponse, error)
 	// Метод получения списка позиций по счёту.
-	GetPositions(accountID AccountID) (*pb.PositionsResponse, error)
+	GetPositions(accountID string) (*pb.PositionsResponse, error)
 	// Метод получения доступного остатка для вывода средств.
-	GetWithdrawLimits(accountID AccountID) (*pb.WithdrawLimitsResponse, error)
+	GetWithdrawLimits(accountID string) (*pb.WithdrawLimitsResponse, error)
 }
 
 type OperationsService struct {
@@ -31,16 +31,16 @@ func NewOperationsService() *OperationsService {
 	return &OperationsService{client: client}
 }
 
-func (os OperationsService) GetOperations(accountID AccountID, from, to *timestamp.Timestamp, state pb.OperationState, figi Figi) ([]*pb.Operation, error) {
+func (os OperationsService) GetOperations(accountID string, from, to *timestamp.Timestamp, state pb.OperationState, figi string) ([]*pb.Operation, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := os.client.GetOperations(ctx, &pb.OperationsRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 		From: from,
 		To: to,
 		State: state,
-		Figi: string(figi),
+		Figi: figi,
 	})
 	if err != nil {
 		return nil, err
@@ -49,12 +49,12 @@ func (os OperationsService) GetOperations(accountID AccountID, from, to *timesta
 	return res.Operations, nil
 }
 
-func (os OperationsService) GetPortfolio(accountID AccountID) (*pb.PortfolioResponse, error) {
+func (os OperationsService) GetPortfolio(accountID string) (*pb.PortfolioResponse, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := os.client.GetPortfolio(ctx, &pb.PortfolioRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 	})
 	if err != nil {
 		return nil, err
@@ -63,12 +63,12 @@ func (os OperationsService) GetPortfolio(accountID AccountID) (*pb.PortfolioResp
 	return res, nil
 }
 
-func (os OperationsService) GetPositions(accountID AccountID) (*pb.PositionsResponse, error) {
+func (os OperationsService) GetPositions(accountID string) (*pb.PositionsResponse, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := os.client.GetPositions(ctx, &pb.PositionsRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 	})
 	if err != nil {
 		return nil, err
@@ -77,12 +77,12 @@ func (os OperationsService) GetPositions(accountID AccountID) (*pb.PositionsResp
 	return res, nil
 }
 
-func (os OperationsService) GetWithdrawLimits(accountID AccountID) (*pb.WithdrawLimitsResponse, error) {
+func (os OperationsService) GetWithdrawLimits(accountID string) (*pb.WithdrawLimitsResponse, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := os.client.GetWithdrawLimits(ctx, &pb.WithdrawLimitsRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 	})
 	if err != nil {
 		return nil, err

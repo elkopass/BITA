@@ -8,15 +8,15 @@ import (
 
 type MarketDataInterface interface {
 	// Метод запроса исторических свечей по инструменту.
-	GetCandles(figi Figi, from, to *timestamp.Timestamp, interval pb.CandleInterval) ([]*pb.HistoricCandle, error)
+	GetCandles(figi string, from, to *timestamp.Timestamp, interval pb.CandleInterval) ([]*pb.HistoricCandle, error)
 	// Метод запроса последних цен по инструментам.
 	GetLastPrices(figi []string) ([]*pb.LastPrice, error)
 	// Метод получения стакана по инструменту.
-	GetOrderBook(figi Figi, depth int) (*pb.GetOrderBookResponse, error)
+	GetOrderBook(figi string, depth int) (*pb.GetOrderBookResponse, error)
 	// Метод запроса статуса торгов по инструментам.
-	GetTradingStatus(figi Figi) (*pb.GetTradingStatusResponse, error)
+	GetTradingStatus(figi string) (*pb.GetTradingStatusResponse, error)
 	// Метод запроса последних обезличенных сделок по инструменту.
-	GetLastTrades(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Trade, error)
+	GetLastTrades(figi string, from, to *timestamp.Timestamp) ([]*pb.Trade, error)
 }
 
 type MarketDataService struct {
@@ -33,12 +33,12 @@ func NewMarketDataService() *MarketDataService {
 	return &MarketDataService{client: client}
 }
 
-func (mds MarketDataService) GetCandles(figi Figi, from, to *timestamp.Timestamp, interval pb.CandleInterval) ([]*pb.HistoricCandle, error) {
+func (mds MarketDataService) GetCandles(figi string, from, to *timestamp.Timestamp, interval pb.CandleInterval) ([]*pb.HistoricCandle, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := mds.client.GetCandles(ctx, &pb.GetCandlesRequest{
-		Figi: string(figi),
+		Figi: figi,
 		From: from,
 		To: to,
 		Interval: interval,
@@ -64,12 +64,12 @@ func (mds MarketDataService) GetLastPrices(figi []string) ([]*pb.LastPrice, erro
 	return res.LastPrices, nil
 }
 
-func (mds MarketDataService) GetOrderBook(figi Figi, depth int) (*pb.GetOrderBookResponse, error) {
+func (mds MarketDataService) GetOrderBook(figi string, depth int) (*pb.GetOrderBookResponse, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := mds.client.GetOrderBook(ctx, &pb.GetOrderBookRequest{
-		Figi: string(figi),
+		Figi: figi,
 		Depth: int32(depth),
 	})
 	if err != nil {
@@ -79,12 +79,12 @@ func (mds MarketDataService) GetOrderBook(figi Figi, depth int) (*pb.GetOrderBoo
 	return res, nil
 }
 
-func (mds MarketDataService) GetTradingStatus(figi Figi) (*pb.GetTradingStatusResponse, error) {
+func (mds MarketDataService) GetTradingStatus(figi string) (*pb.GetTradingStatusResponse, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := mds.client.GetTradingStatus(ctx, &pb.GetTradingStatusRequest{
-		Figi: string(figi),
+		Figi: figi,
 	})
 	if err != nil {
 		return nil, err
@@ -93,12 +93,12 @@ func (mds MarketDataService) GetTradingStatus(figi Figi) (*pb.GetTradingStatusRe
 	return res, nil
 }
 
-func (mds MarketDataService) GetLastTrades(figi Figi, from, to *timestamp.Timestamp) ([]*pb.Trade, error) {
+func (mds MarketDataService) GetLastTrades(figi string, from, to *timestamp.Timestamp) ([]*pb.Trade, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := mds.client.GetLastTrades(ctx, &pb.GetLastTradesRequest{
-		Figi: string(figi),
+		Figi: figi,
 		From: from,
 		To: to,
 	})

@@ -10,11 +10,11 @@ type OrdersInterface interface {
 	// Метод выставления заявки.
 	PostOrder(order *pb.PostOrderRequest) (*pb.PostOrderResponse, error)
 	// Метод отмены биржевой заявки.
-	CancelOrder(accountID AccountID, orderID OrderID) (*timestamp.Timestamp, error)
+	CancelOrder(accountID string, orderID string) (*timestamp.Timestamp, error)
 	// Метод получения статуса торгового поручения.
-	GetOrderState(accountID AccountID, orderID OrderID) (*pb.OrderState, error)
+	GetOrderState(accountID string, orderID string) (*pb.OrderState, error)
 	// Метод получения списка активных заявок по счёту.
-	GetOrders(accountID AccountID) ([]*pb.OrderState, error)
+	GetOrders(accountID string) ([]*pb.OrderState, error)
 }
 
 type OrdersService struct {
@@ -43,13 +43,13 @@ func (os OrdersService) PostOrder(order *pb.PostOrderRequest) (*pb.PostOrderResp
 	return res, nil
 }
 
-func (os OrdersService) CancelOrder(accountID AccountID, orderID OrderID) (*timestamp.Timestamp, error) {
+func (os OrdersService) CancelOrder(accountID string, orderID string) (*timestamp.Timestamp, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := os.client.CancelOrder(ctx, &pb.CancelOrderRequest{
-		AccountId: string(accountID),
-		OrderId: string(orderID),
+		AccountId: accountID,
+		OrderId: orderID,
 	})
 	if err != nil {
 		return nil, err
@@ -58,13 +58,13 @@ func (os OrdersService) CancelOrder(accountID AccountID, orderID OrderID) (*time
 	return res.Time, nil
 }
 
-func (os OrdersService) GetOrderState(accountID AccountID, orderID OrderID) (*pb.OrderState, error) {
+func (os OrdersService) GetOrderState(accountID string, orderID string) (*pb.OrderState, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := os.client.GetOrderState(ctx, &pb.GetOrderStateRequest{
-		AccountId: string(accountID),
-		OrderId: string(orderID),
+		AccountId: accountID,
+		OrderId: orderID,
 	})
 	if err != nil {
 		return nil, err
@@ -73,12 +73,12 @@ func (os OrdersService) GetOrderState(accountID AccountID, orderID OrderID) (*pb
 	return res, nil
 }
 
-func (os OrdersService) GetOrders(accountID AccountID) ([]*pb.OrderState, error) {
+func (os OrdersService) GetOrders(accountID string) ([]*pb.OrderState, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
 	res, err := os.client.GetOrders(ctx, &pb.GetOrdersRequest{
-		AccountId: string(accountID),
+		AccountId: accountID,
 	})
 	if err != nil {
 		return nil, err
