@@ -21,7 +21,7 @@ func NewTradeBot() *TradeBot {
 }
 
 func (tb TradeBot) Run(ctx context.Context) (err error) {
-	tb.logger.Info("starting in sandbox!")
+	tb.logger.Info("starting!")
 
 	accountID, err := services.SandboxService.OpenSandboxAccount()
 	if err != nil {
@@ -31,24 +31,6 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 
 	// replace logger
 	tb.logger = tb.logger.With("account_id", accountID)
-
-	//res1, err := services.SandboxService.SandboxPayIn(accountID, &pb.MoneyValue{
-	//	Currency: "RUB",
-	//	Units:    1000,
-	//})
-	//if err != nil {
-	//	tb.logger.Errorf("can not pay in: %v", err)
-	//}
-	//tb.logger.Infof("account successfully replenished with %d.%d %s", res1.Units, res1.Nano, res1.Currency)
-	//
-	//res2, err := services.SandboxService.SandboxPayIn(accountID, &pb.MoneyValue{
-	//	Currency: "USD",
-	//	Units:    100,
-	//})
-	//if err != nil {
-	//	tb.logger.Errorf("can not pay in: %v", err)
-	//}
-	//tb.logger.Infof("account successfully replenished with %d.%d %s", res2.Units, res2.Nano, res2.Currency)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(len(tb.config.Figi))
