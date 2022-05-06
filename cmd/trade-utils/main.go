@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
@@ -18,7 +19,10 @@ func main() {
 
 	for _, share := range shares {
 		if share.TradingStatus == pb.SecurityTradingStatus_SECURITY_TRADING_STATUS_NORMAL_TRADING {
-			log.Infof("%s: %s (%s)", share.Name, share.Figi, share.TradingStatus)
+			message := fmt.Sprintf("[%s] %s: %s", share.Ticker, share.Name, share.Figi)
+			message += fmt.Sprintf(" (currency: %s, lot: %d)", share.Currency, share.Lot)
+
+			log.Info(message)
 		}
 	}
 }
