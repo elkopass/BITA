@@ -5,6 +5,11 @@ import (
 )
 
 var (
+	ApiRequests = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "tradebot_api_requests",
+		Help: "Total requests to Tinkoff Invest API counter",
+	}, []string{"bot_id", "service", "method"})
+
 	InstrumentsPurchased = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "tradebot_instruments_purchased",
 		Help: "Purchased instruments gauge",
@@ -20,6 +25,7 @@ var (
 )
 
 func init()  {
+	prometheus.MustRegister(ApiRequests)
 	prometheus.MustRegister(InstrumentsPurchased)
 	prometheus.MustRegister(OrdersPlaced)
 	prometheus.MustRegister(OrdersFulfilled)

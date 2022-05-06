@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/metrics"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
@@ -67,6 +68,7 @@ func (is InstrumentsService) TradingSchedules(exchange string, from, to *timesta
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("TradingSchedules")
 	res, err := is.client.TradingSchedules(ctx, &pb.TradingSchedulesRequest{
 		Exchange: exchange,
 		From:     from,
@@ -83,6 +85,7 @@ func (is InstrumentsService) BondBy(filters pb.InstrumentRequest) (*pb.Bond, err
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("BondBy")
 	res, err := is.client.BondBy(ctx, &filters)
 	if err != nil {
 		return nil, err
@@ -95,6 +98,7 @@ func (is InstrumentsService) Bonds(status pb.InstrumentStatus) ([]*pb.Bond, erro
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("Bonds")
 	res, err := is.client.Bonds(ctx, &pb.InstrumentsRequest{
 		InstrumentStatus: status,
 	})
@@ -109,10 +113,11 @@ func (is InstrumentsService) GetBondCoupons(figi string, from, to *timestamp.Tim
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("GetBoundCoupons")
 	res, err := is.client.GetBondCoupons(ctx, &pb.GetBondCouponsRequest{
 		Figi: figi,
 		From: from,
-		To: to,
+		To:   to,
 	})
 	if err != nil {
 		return nil, err
@@ -125,6 +130,7 @@ func (is InstrumentsService) CurrencyBy(filters pb.InstrumentRequest) (*pb.Curre
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("CurrencyBy")
 	res, err := is.client.CurrencyBy(ctx, &filters)
 	if err != nil {
 		return nil, err
@@ -137,6 +143,7 @@ func (is InstrumentsService) Currencies(status pb.InstrumentStatus) ([]*pb.Curre
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("Currencies")
 	res, err := is.client.Currencies(ctx, &pb.InstrumentsRequest{
 		InstrumentStatus: status,
 	})
@@ -151,6 +158,7 @@ func (is InstrumentsService) EtfBy(filters pb.InstrumentRequest) (*pb.Etf, error
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("EtfBy")
 	res, err := is.client.EtfBy(ctx, &filters)
 	if err != nil {
 		return nil, err
@@ -163,6 +171,7 @@ func (is InstrumentsService) Etfs(status pb.InstrumentStatus) ([]*pb.Etf, error)
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("Etfs")
 	res, err := is.client.Etfs(ctx, &pb.InstrumentsRequest{
 		InstrumentStatus: status,
 	})
@@ -177,6 +186,7 @@ func (is InstrumentsService) FutureBy(filters pb.InstrumentRequest) (*pb.Future,
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("FutureBy")
 	res, err := is.client.FutureBy(ctx, &filters)
 	if err != nil {
 		return nil, err
@@ -189,6 +199,7 @@ func (is InstrumentsService) Futures(status pb.InstrumentStatus) ([]*pb.Future, 
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("Futures")
 	res, err := is.client.Futures(ctx, &pb.InstrumentsRequest{
 		InstrumentStatus: status,
 	})
@@ -203,6 +214,7 @@ func (is InstrumentsService) ShareBy(filters pb.InstrumentRequest) (*pb.Share, e
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("ShareBy")
 	res, err := is.client.ShareBy(ctx, &filters)
 	if err != nil {
 		return nil, err
@@ -215,6 +227,7 @@ func (is InstrumentsService) Shares(status pb.InstrumentStatus) ([]*pb.Share, er
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("Shares")
 	res, err := is.client.Shares(ctx, &pb.InstrumentsRequest{
 		InstrumentStatus: status,
 	})
@@ -229,10 +242,11 @@ func (is InstrumentsService) GetAccruedInterests(figi string, from, to *timestam
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("GetAccruedInterests")
 	res, err := is.client.GetAccruedInterests(ctx, &pb.GetAccruedInterestsRequest{
 		Figi: figi,
 		From: from,
-		To: to,
+		To:   to,
 	})
 	if err != nil {
 		return nil, err
@@ -245,6 +259,7 @@ func (is InstrumentsService) GetFuturesMargin(figi string) (*pb.GetFuturesMargin
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("GetFuturesMargin")
 	res, err := is.client.GetFuturesMargin(ctx, &pb.GetFuturesMarginRequest{
 		Figi: figi,
 	})
@@ -259,6 +274,7 @@ func (is InstrumentsService) GetInstrumentBy(filters pb.InstrumentRequest) (*pb.
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("GetInstrumentBy")
 	res, err := is.client.GetInstrumentBy(ctx, &filters)
 	if err != nil {
 		return nil, err
@@ -271,10 +287,11 @@ func (is InstrumentsService) GetDividends(figi string, from, to *timestamp.Times
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("GetDividends")
 	res, err := is.client.GetDividends(ctx, &pb.GetDividendsRequest{
 		Figi: figi,
 		From: from,
-		To: to,
+		To:   to,
 	})
 	if err != nil {
 		return nil, err
@@ -287,6 +304,7 @@ func (is InstrumentsService) GetAssetBy(assetID string) (*pb.AssetFull, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("GetAssetBy")
 	res, err := is.client.GetAssetBy(ctx, &pb.AssetRequest{
 		Id: assetID,
 	})
@@ -301,6 +319,7 @@ func (is InstrumentsService) GetAssets() ([]*pb.Asset, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("GetAssets")
 	res, err := is.client.GetAssets(ctx, &pb.AssetsRequest{})
 	if err != nil {
 		return nil, err
@@ -313,6 +332,7 @@ func (is InstrumentsService) GetFavorites() ([]*pb.FavoriteInstrument, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("GetFavourites")
 	res, err := is.client.GetFavorites(ctx, &pb.GetFavoritesRequest{})
 	if err != nil {
 		return nil, err
@@ -325,10 +345,15 @@ func (is InstrumentsService) EditFavorites(newFavourites *pb.EditFavoritesReques
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	is.incrementRequestsCounter("EditFavorites")
 	res, err := is.client.EditFavorites(ctx, newFavourites)
 	if err != nil {
 		return nil, err
 	}
 
 	return res.FavoriteInstruments, nil
+}
+
+func (is InstrumentsService) incrementRequestsCounter(method string) {
+	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "InstrumentsService", method).Inc()
 }

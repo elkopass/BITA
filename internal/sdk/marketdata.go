@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/metrics"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
@@ -37,10 +38,11 @@ func (mds MarketDataService) GetCandles(figi string, from, to *timestamp.Timesta
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	mds.incrementRequestsCounter("GetCandles")
 	res, err := mds.client.GetCandles(ctx, &pb.GetCandlesRequest{
-		Figi: figi,
-		From: from,
-		To: to,
+		Figi:     figi,
+		From:     from,
+		To:       to,
 		Interval: interval,
 	})
 	if err != nil {
@@ -54,6 +56,7 @@ func (mds MarketDataService) GetLastPrices(figi []string) ([]*pb.LastPrice, erro
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	mds.incrementRequestsCounter("GetLastPrices")
 	res, err := mds.client.GetLastPrices(ctx, &pb.GetLastPricesRequest{
 		Figi: figi,
 	})
@@ -68,8 +71,9 @@ func (mds MarketDataService) GetOrderBook(figi string, depth int) (*pb.GetOrderB
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	mds.incrementRequestsCounter("GetOrderBook")
 	res, err := mds.client.GetOrderBook(ctx, &pb.GetOrderBookRequest{
-		Figi: figi,
+		Figi:  figi,
 		Depth: int32(depth),
 	})
 	if err != nil {
@@ -83,6 +87,7 @@ func (mds MarketDataService) GetTradingStatus(figi string) (*pb.GetTradingStatus
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	mds.incrementRequestsCounter("GetTradingStatus")
 	res, err := mds.client.GetTradingStatus(ctx, &pb.GetTradingStatusRequest{
 		Figi: figi,
 	})
@@ -97,14 +102,19 @@ func (mds MarketDataService) GetLastTrades(figi string, from, to *timestamp.Time
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	mds.incrementRequestsCounter("GetLastTrades")
 	res, err := mds.client.GetLastTrades(ctx, &pb.GetLastTradesRequest{
 		Figi: figi,
 		From: from,
-		To: to,
+		To:   to,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	return res.Trades, nil
+}
+
+func (mds MarketDataService) incrementRequestsCounter(method string) {
+	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "MarketDataService", method).Inc()
 }

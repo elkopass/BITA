@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/metrics"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
@@ -49,6 +50,7 @@ func (ss SandboxService) OpenSandboxAccount() (string, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("OpenSandboxAccount")
 	res, err := ss.client.OpenSandboxAccount(ctx, &pb.OpenSandboxAccountRequest{})
 	if err != nil {
 		return "", err
@@ -61,6 +63,7 @@ func (ss SandboxService) GetSandboxAccounts() ([]*pb.Account, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("GetSandboxAccounts")
 	res, err := ss.client.GetSandboxAccounts(ctx, &pb.GetAccountsRequest{})
 	if err != nil {
 		return nil, err
@@ -73,6 +76,7 @@ func (ss SandboxService) CloseSandboxAccount(accountID string) error {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("CloseSandboxAccount")
 	_, err := ss.client.CloseSandboxAccount(ctx, &pb.CloseSandboxAccountRequest{
 		AccountId: accountID,
 	})
@@ -83,6 +87,7 @@ func (ss SandboxService) PostSandboxOrder(order *pb.PostOrderRequest) (*pb.PostO
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("PostSandboxOrder")
 	res, err := ss.client.PostSandboxOrder(ctx, order)
 	if err != nil {
 		return nil, err
@@ -95,6 +100,7 @@ func (ss SandboxService) GetSandboxOrders(accountID string) ([]*pb.OrderState, e
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("GetSandboxOrders")
 	res, err := ss.client.GetSandboxOrders(ctx, &pb.GetOrdersRequest{
 		AccountId: accountID,
 	})
@@ -109,6 +115,7 @@ func (ss SandboxService) CancelSandboxOrder(accountID string, orderID string) (*
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("CancelSandboxOrder")
 	res, err := ss.client.CancelSandboxOrder(ctx, &pb.CancelOrderRequest{
 		AccountId: accountID,
 		OrderId:   orderID,
@@ -124,6 +131,7 @@ func (ss SandboxService) GetSandboxOrderState(accountID string, orderID string) 
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("GetSandboxOrderState")
 	res, err := ss.client.GetSandboxOrderState(ctx, &pb.GetOrderStateRequest{
 		AccountId: accountID,
 		OrderId:   orderID,
@@ -139,6 +147,7 @@ func (ss SandboxService) GetSandboxPositions(accountID string) (*pb.PositionsRes
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("GetSandboxPositions")
 	res, err := ss.client.GetSandboxPositions(ctx, &pb.PositionsRequest{
 		AccountId: accountID,
 	})
@@ -153,6 +162,7 @@ func (ss SandboxService) GetSandboxOperations(filter *pb.OperationsRequest) ([]*
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("GetSandboxOperations")
 	res, err := ss.client.GetSandboxOperations(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -165,6 +175,7 @@ func (ss SandboxService) GetSandboxPortfolio(accountID string) (*pb.PortfolioRes
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("GetSandboxPortfolio")
 	res, err := ss.client.GetSandboxPortfolio(ctx, &pb.PortfolioRequest{
 		AccountId: accountID,
 	})
@@ -179,6 +190,7 @@ func (ss SandboxService) SandboxPayIn(accountID string, amount *pb.MoneyValue) (
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	ss.incrementRequestsCounter("SandboxPayIn")
 	res, err := ss.client.SandboxPayIn(ctx, &pb.SandboxPayInRequest{
 		AccountId: accountID,
 		Amount:    amount,
@@ -188,4 +200,8 @@ func (ss SandboxService) SandboxPayIn(accountID string, amount *pb.MoneyValue) (
 	}
 
 	return res.Balance, nil
+}
+
+func (ss SandboxService) incrementRequestsCounter(method string) {
+	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "SandboxService", method).Inc()
 }

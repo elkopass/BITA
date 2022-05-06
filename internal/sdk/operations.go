@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/metrics"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
@@ -35,12 +36,13 @@ func (os OperationsService) GetOperations(accountID string, from, to *timestamp.
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	os.incrementRequestsCounter("GetOperations")
 	res, err := os.client.GetOperations(ctx, &pb.OperationsRequest{
 		AccountId: accountID,
-		From: from,
-		To: to,
-		State: state,
-		Figi: figi,
+		From:      from,
+		To:        to,
+		State:     state,
+		Figi:      figi,
 	})
 	if err != nil {
 		return nil, err
@@ -53,6 +55,7 @@ func (os OperationsService) GetPortfolio(accountID string) (*pb.PortfolioRespons
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	os.incrementRequestsCounter("GetPortfolio")
 	res, err := os.client.GetPortfolio(ctx, &pb.PortfolioRequest{
 		AccountId: accountID,
 	})
@@ -67,6 +70,7 @@ func (os OperationsService) GetPositions(accountID string) (*pb.PositionsRespons
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	os.incrementRequestsCounter("GetPositions")
 	res, err := os.client.GetPositions(ctx, &pb.PositionsRequest{
 		AccountId: accountID,
 	})
@@ -81,6 +85,7 @@ func (os OperationsService) GetWithdrawLimits(accountID string) (*pb.WithdrawLim
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	os.incrementRequestsCounter("GetWithdrawLimits")
 	res, err := os.client.GetWithdrawLimits(ctx, &pb.WithdrawLimitsRequest{
 		AccountId: accountID,
 	})
@@ -89,4 +94,8 @@ func (os OperationsService) GetWithdrawLimits(accountID string) (*pb.WithdrawLim
 	}
 
 	return res, nil
+}
+
+func (os OperationsService) incrementRequestsCounter(method string) {
+	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "OperationsService", method).Inc()
 }

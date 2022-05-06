@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/metrics"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
@@ -33,6 +34,7 @@ func (sos StopOrdersService) PostStopOrder(stopOrder *pb.PostStopOrderRequest) (
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	sos.incrementRequestsCounter("PostStopOrder")
 	res, err := sos.client.PostStopOrder(ctx, stopOrder)
 	if err != nil {
 		return "", err
@@ -45,6 +47,7 @@ func (sos StopOrdersService) GetStopOrders(accountID string) ([]*pb.StopOrder, e
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	sos.incrementRequestsCounter("GetStopOrders")
 	res, err := sos.client.GetStopOrders(ctx, &pb.GetStopOrdersRequest{
 		AccountId: accountID,
 	})
@@ -59,8 +62,9 @@ func (sos StopOrdersService) CancelStopOrder(accountID string, stopOrderID strin
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	sos.incrementRequestsCounter("CancelStopOrder")
 	res, err := sos.client.CancelStopOrder(ctx, &pb.CancelStopOrderRequest{
-		AccountId: accountID,
+		AccountId:   accountID,
 		StopOrderId: stopOrderID,
 	})
 	if err != nil {
@@ -68,4 +72,8 @@ func (sos StopOrdersService) CancelStopOrder(accountID string, stopOrderID strin
 	}
 
 	return res.Time, nil
+}
+
+func (sos StopOrdersService) incrementRequestsCounter(method string) {
+	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "StopOrdersService", method).Inc()
 }

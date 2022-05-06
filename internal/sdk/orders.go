@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/metrics"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
@@ -35,6 +36,7 @@ func (os OrdersService) PostOrder(order *pb.PostOrderRequest) (*pb.PostOrderResp
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	os.incrementRequestsCounter("PostOrder")
 	res, err := os.client.PostOrder(ctx, order)
 	if err != nil {
 		return nil, err
@@ -47,9 +49,10 @@ func (os OrdersService) CancelOrder(accountID string, orderID string) (*timestam
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	os.incrementRequestsCounter("CancelOrder")
 	res, err := os.client.CancelOrder(ctx, &pb.CancelOrderRequest{
 		AccountId: accountID,
-		OrderId: orderID,
+		OrderId:   orderID,
 	})
 	if err != nil {
 		return nil, err
@@ -62,9 +65,10 @@ func (os OrdersService) GetOrderState(accountID string, orderID string) (*pb.Ord
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	os.incrementRequestsCounter("GetOrderState")
 	res, err := os.client.GetOrderState(ctx, &pb.GetOrderStateRequest{
 		AccountId: accountID,
-		OrderId: orderID,
+		OrderId:   orderID,
 	})
 	if err != nil {
 		return nil, err
@@ -77,6 +81,7 @@ func (os OrdersService) GetOrders(accountID string) ([]*pb.OrderState, error) {
 	ctx, cancel := createRequestContext()
 	defer cancel()
 
+	os.incrementRequestsCounter("GetOrders")
 	res, err := os.client.GetOrders(ctx, &pb.GetOrdersRequest{
 		AccountId: accountID,
 	})
@@ -85,4 +90,8 @@ func (os OrdersService) GetOrders(accountID string) ([]*pb.OrderState, error) {
 	}
 
 	return res.Orders, nil
+}
+
+func (os OrdersService) incrementRequestsCounter(method string) {
+	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "OrdersService", method).Inc()
 }

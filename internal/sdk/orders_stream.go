@@ -35,4 +35,3 @@ func (oss OrdersStreamService) TradesStream(in *pb.TradesStreamRequest) (pb.Orde
 
 	return res, nil
 }
-

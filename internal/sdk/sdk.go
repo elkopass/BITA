@@ -1,6 +1,6 @@
 package sdk
 
-const Version = "0.1.1"
+const Version = "0.1.2"
 
 type ServicePool struct {
 	InstrumentsService InstrumentsService
