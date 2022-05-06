@@ -21,7 +21,7 @@ type TradeConfig struct {
 	LongTrendIntervalSeconds  int `default:"86400" split_words:"true"`
 	ShortTrendIntervalSeconds int `default:"3600" split_words:"true"`
 
-	WorkerSleepDurationSeconds int `default:"5" split_words:"true"`
+	WorkerSleepDurationSeconds int `default:"30" split_words:"true"`
 }
 
 func NewTradeConfig() *TradeConfig {
