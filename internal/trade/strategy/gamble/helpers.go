@@ -5,6 +5,7 @@ import (
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/sdcoffey/big"
 	"github.com/sdcoffey/techan"
+	"strconv"
 )
 
 func candlesToTimeSeries(candles []*pb.HistoricCandle) *techan.TimeSeries {
@@ -79,4 +80,22 @@ func getFormattedPositions(positions []*pb.PortfolioPosition) string {
 	}
 
 	return formattedPositions
+}
+
+func QuotationToFloat(q pb.Quotation) float64 {
+	if q.Nano < 0 {
+		q.Nano = -q.Nano
+	}
+	p, _ := strconv.ParseFloat(fmt.Sprintf("%d.%d", q.Units, q.Nano), 64)
+
+	return p
+}
+
+func MoneyValueToFloat(q pb.MoneyValue) float64 {
+	if q.Nano < 0 {
+		q.Nano = -q.Nano
+	}
+	p, _ := strconv.ParseFloat(fmt.Sprintf("%d.%d", q.Units, q.Nano), 64)
+
+	return p
 }

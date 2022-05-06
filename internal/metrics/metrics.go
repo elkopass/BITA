@@ -25,12 +25,12 @@ var (
 	OrdersPlaced = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "tradebot_orders_placed",
 		Help: "Placed orders by bot gauge",
-	}, []string{"bot_id", "figi"})
+	}, []string{"bot_id", "figi", "direction"})
 	// OrdersFulfilled counts number of total sold instruments.
 	OrdersFulfilled = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "tradebot_orders_fulfilled",
 		Help: "Fulfilled orders total counter",
-	}, []string{"bot_id", "figi"})
+	}, []string{"bot_id", "figi", "direction"})
 
 	// InstrumentLastPrice stores last price for existing instrument.
 	InstrumentLastPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -46,7 +46,7 @@ var (
 	PortfolioInstrumentsAmount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "tradebot_portfolio_instruments_amount",
 		Help: "Portfolio instruments total money amount gauge",
-	}, []string{"account_id", "instrument"})
+	}, []string{"account_id", "instrument", "currency"})
 	// PortfolioExpectedYieldOverall stores expected portfolio income.
 	PortfolioExpectedYieldOverall = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "tradebot_portfolio_expected_yield_overall",
@@ -55,7 +55,7 @@ var (
 	// PortfolioPositionCurrentPrice stores current price for each open position.
 	PortfolioPositionCurrentPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "tradebot_portfolio_position_current_price",
-		Help: "Portfolio position current price (for all lots) gauge",
+		Help: "Portfolio position current price (for one lot) gauge",
 	}, []string{"account_id", "figi"})
 	// PortfolioPositionCurrentPrice stores expected yield for each open position.
 	PortfolioPositionExpectedYield = prometheus.NewGaugeVec(prometheus.GaugeOpts{

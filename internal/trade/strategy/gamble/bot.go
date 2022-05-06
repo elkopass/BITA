@@ -2,6 +2,7 @@ package gamble
 
 import (
 	"context"
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/config"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
 	"go.uber.org/zap"
 	"sync"
@@ -23,11 +24,14 @@ func NewTradeBot() *TradeBot {
 func (tb TradeBot) Run(ctx context.Context) (err error) {
 	tb.logger.Info("starting!")
 
-	accountID, err := services.SandboxService.OpenSandboxAccount()
-	if err != nil {
-		tb.logger.Errorf("can not create account: %v", err)
+	accountID := config.TradeBotConfig().AccountID
+	if config.TradeBotConfig().IsSandbox {
+		accountID, err = services.SandboxService.OpenSandboxAccount()
+		if err != nil {
+			tb.logger.Errorf("can not create account: %v", err)
+		}
+		tb.logger.Infof("created new account with ID %s", accountID)
 	}
-	tb.logger.Infof("created new account with ID %s", accountID)
 
 	// replace logger
 	tb.logger = tb.logger.With("account_id", accountID)
@@ -38,7 +42,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	for _, f := range tb.config.Figi {
 		workerCtx, cancel := context.WithCancel(context.Background())
 
-		w := NewTradeWorker(f, string(accountID))
+		w := NewTradeWorker(f, accountID)
 		tb.cancelFuncs = append(tb.cancelFuncs, cancel)
 
 		go func() {
@@ -57,11 +61,13 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 
 	wg.Wait()
 
-	err = services.SandboxService.CloseSandboxAccount(accountID)
-	if err != nil {
-		tb.logger.Errorf("can't create account: %v", err)
+	if config.TradeBotConfig().IsSandbox {
+		err = services.SandboxService.CloseSandboxAccount(accountID)
+		if err != nil {
+			tb.logger.Errorf("can't create account: %v", err)
+		}
+		tb.logger.Infof("account with ID %s closed successfully", accountID)
 	}
-	tb.logger.Infof("account with ID %s closed successfully", accountID)
 
 	return nil
 }

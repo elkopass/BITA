@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/TinkoffInvestRobotContest/internal/metrics"
 	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
 	"github.com/google/uuid"
 	"github.com/sdcoffey/techan"
@@ -88,8 +89,30 @@ func (tw *TradeWorker) checkPortfolio() {
 	}
 
 	tw.logger.Info("positions: ", getFormattedPositions(portfolio.Positions))
+
+	for _, p := range portfolio.Positions {
+		if p.CurrentPrice != nil {
+			metrics.PortfolioPositionCurrentPrice.WithLabelValues(tw.accountID, tw.Figi).Set(MoneyValueToFloat(*p.CurrentPrice))
+		}
+		if p.ExpectedYield != nil {
+			metrics.PortfolioPositionExpectedYield.WithLabelValues(tw.accountID, tw.Figi).Set(QuotationToFloat(*p.ExpectedYield))
+		}
+	}
+
+	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "bonds",
+		portfolio.TotalAmountBonds.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountBonds))
+	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "currencies",
+		portfolio.TotalAmountCurrencies.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountCurrencies))
+	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "etfs",
+		portfolio.TotalAmountEtf.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountEtf))
+	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "futures",
+		portfolio.TotalAmountFutures.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountFutures))
+	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "shares",
+		portfolio.TotalAmountShares.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountShares))
+
 	if portfolio.ExpectedYield != nil {
 		tw.logger.Infof("expected yield: %d.%d", portfolio.ExpectedYield.Units, portfolio.ExpectedYield.Nano)
+		metrics.PortfolioExpectedYieldOverall.WithLabelValues(tw.accountID).Set(QuotationToFloat(*portfolio.ExpectedYield))
 	}
 }
 
@@ -121,6 +144,20 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 	}
 
 	// all another cases are OK to place a new order
+	direction := pb.OrderDirection_ORDER_DIRECTION_BUY.String()
+	if tw.sellFlag {
+		direction = pb.OrderDirection_ORDER_DIRECTION_SELL.String()
+	}
+
+	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi, direction).Dec()
+	metrics.OrdersFulfilled.WithLabelValues(loggy.GetBotID(), tw.Figi, direction).Inc()
+
+	if tw.sellFlag {
+		metrics.InstrumentsPurchased.WithLabelValues(loggy.GetBotID(), tw.Figi).Dec()
+	} else {
+		metrics.InstrumentsPurchased.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
+	}
+
 	return true
 }
 
@@ -137,6 +174,8 @@ func (tw *TradeWorker) checkInstrument() {
 		orderBook.LimitUp.Units, orderBook.LimitUp.Nano,
 		orderBook.LimitDown.Units, orderBook.LimitDown.Nano,
 	)
+
+	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(QuotationToFloat(*orderBook.LastPrice))
 }
 
 func (tw *TradeWorker) tryToSellInstrument() {
@@ -182,6 +221,9 @@ func (tw *TradeWorker) tryToSellInstrument() {
 	tw.logger.With("order_id", tw.orderID).
 		Infof("sell order created, current status: %s", order.ExecutionReportStatus.String())
 
+	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
+		pb.OrderDirection_ORDER_DIRECTION_SELL.String()).Inc()
+
 	tw.checkPortfolio()
 }
 
@@ -222,6 +264,9 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 	tw.orderID = order.OrderId
 	tw.logger.With("order_id", tw.orderID).
 		Infof("buy order created, current status: %s", order.ExecutionReportStatus.String())
+
+	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
+		pb.OrderDirection_ORDER_DIRECTION_BUY.String()).Inc()
 }
 
 func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
@@ -232,6 +277,12 @@ func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
 	}
 
 	tw.logger.Infof("trading status: %s", status.TradingStatus.String())
+
+	for _, s := range pb.SecurityTradingStatus_name {
+		metrics.InstrumentTradingStatus.WithLabelValues(tw.Figi, s).Set(0)
+	}
+	metrics.InstrumentTradingStatus.WithLabelValues(tw.Figi, status.TradingStatus.String()).Set(1)
+
 	return status.TradingStatus == pb.SecurityTradingStatus_SECURITY_TRADING_STATUS_NORMAL_TRADING
 }
 
@@ -255,12 +306,6 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 	if err != nil {
 		return false, errors.New("error getting long candles: " + err.Error())
 	}
-
-	//formattedShortCandles := getFormattedCandles(shortCandles)
-	//tw.logger.Debug("short candles:", formattedShortCandles)
-
-	//formattedLongCandles := getFormattedCandles(longCandles)
-	//tw.logger.Debug("short candles:", formattedLongCandles)
 
 	if len(shortCandles) < 6 || len(longCandles) < 6 {
 		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d and %d",
