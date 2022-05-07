@@ -6,6 +6,7 @@ import (
 	"github.com/elkopass/BITA/internal/loggy"
 	"github.com/elkopass/BITA/internal/metrics"
 	pb "github.com/elkopass/BITA/internal/proto"
+	"github.com/elkopass/BITA/internal/trade/utils"
 	"github.com/google/uuid"
 	"github.com/sdcoffey/techan"
 	"go.uber.org/zap"
@@ -21,7 +22,8 @@ type TradeWorker struct {
 	orderID   string
 	accountID string
 
-	sellFlag bool // if true, bot is trying to sell his assets
+	sellFlag   bool           // if true, worker is trying to sell assets
+	orderPrice *pb.MoneyValue // if order is set
 
 	logger *zap.SugaredLogger
 	config TradeConfig
@@ -60,11 +62,11 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 			if tw.orderID != "" {
 				if tw.orderIsFulfilled() {
 					tw.orderID = ""
+					tw.orderPrice = nil
 					tw.sellFlag = !tw.sellFlag
 					tw.checkPortfolio()
 				} else {
 					tw.logger.With("order_id", tw.orderID).Debug("order is still placed")
-					tw.checkInstrument()
 				}
 				continue
 			}
@@ -88,31 +90,31 @@ func (tw *TradeWorker) checkPortfolio() {
 		return // just ignoring it
 	}
 
-	tw.logger.Info("positions: ", getFormattedPositions(portfolio.Positions))
+	tw.logger.Info("positions: ", utils.GetFormattedPositions(portfolio.Positions))
 
 	for _, p := range portfolio.Positions {
 		if p.CurrentPrice != nil {
-			metrics.PortfolioPositionCurrentPrice.WithLabelValues(tw.accountID, tw.Figi).Set(MoneyValueToFloat(*p.CurrentPrice))
+			metrics.PortfolioPositionCurrentPrice.WithLabelValues(tw.accountID, tw.Figi).Set(utils.MoneyValueToFloat(*p.CurrentPrice))
 		}
 		if p.ExpectedYield != nil {
-			metrics.PortfolioPositionExpectedYield.WithLabelValues(tw.accountID, tw.Figi).Set(QuotationToFloat(*p.ExpectedYield))
+			metrics.PortfolioPositionExpectedYield.WithLabelValues(tw.accountID, tw.Figi).Set(utils.QuotationToFloat(*p.ExpectedYield))
 		}
 	}
 
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "bonds",
-		portfolio.TotalAmountBonds.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountBonds))
+		portfolio.TotalAmountBonds.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountBonds))
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "currencies",
-		portfolio.TotalAmountCurrencies.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountCurrencies))
+		portfolio.TotalAmountCurrencies.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountCurrencies))
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "etfs",
-		portfolio.TotalAmountEtf.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountEtf))
+		portfolio.TotalAmountEtf.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountEtf))
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "futures",
-		portfolio.TotalAmountFutures.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountFutures))
+		portfolio.TotalAmountFutures.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountFutures))
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "shares",
-		portfolio.TotalAmountShares.Currency).Set(MoneyValueToFloat(*portfolio.TotalAmountShares))
+		portfolio.TotalAmountShares.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountShares))
 
 	if portfolio.ExpectedYield != nil {
 		tw.logger.Infof("expected yield: %d.%d", portfolio.ExpectedYield.Units, portfolio.ExpectedYield.Nano)
-		metrics.PortfolioExpectedYieldOverall.WithLabelValues(tw.accountID).Set(QuotationToFloat(*portfolio.ExpectedYield))
+		metrics.PortfolioExpectedYieldOverall.WithLabelValues(tw.accountID).Set(utils.QuotationToFloat(*portfolio.ExpectedYield))
 	}
 }
 
@@ -126,8 +128,7 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 	tw.logger.With("order_id", tw.orderID).
 		Infof("order status: %s, fulfilled %d/%d, current price: %d.%d %s",
 			state.ExecutionReportStatus.String(),
-			state.LotsExecuted,
-			state.LotsRequested,
+			state.LotsExecuted, state.LotsRequested,
 			state.AveragePositionPrice.Units,
 			state.AveragePositionPrice.Nano,
 			state.AveragePositionPrice.Currency,
@@ -161,51 +162,24 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 	return true
 }
 
-func (tw *TradeWorker) checkInstrument() {
-	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 1)
-	if err != nil {
-		tw.logger.Errorf("error getting order book: %v", err)
-		return // just ignoring it
-	}
-
-	tw.logger.Infof("last price: %d.%d, close price: %d.%d, limit up: %d.%d, limit down: %d.%d",
-		orderBook.LastPrice.Units, orderBook.LastPrice.Nano,
-		orderBook.ClosePrice.Units, orderBook.ClosePrice.Nano,
-		orderBook.LimitUp.Units, orderBook.LimitUp.Nano,
-		orderBook.LimitDown.Units, orderBook.LimitDown.Nano,
-	)
-
-	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(QuotationToFloat(*orderBook.LastPrice))
-}
-
 func (tw *TradeWorker) tryToSellInstrument() {
-	priceIsOK, err := tw.priceIsOkToSell()
-	if err != nil {
-		tw.logger.Errorf("error getting price: %v", err)
-		return // just ignore
-	}
-	if !priceIsOK {
-		tw.logger.Debug("price is not OK to sell")
-		return // wait for the next turn
-	}
-
 	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
 		return // just ignoring it
 	}
-	tw.logger.Infof("last price: %d.%d, close price: %d.%d, limit up: %d.%d, limit down: %d.%d",
-		orderBook.LastPrice.Units, orderBook.LastPrice.Nano,
-		orderBook.ClosePrice.Units, orderBook.ClosePrice.Nano,
-		orderBook.LimitUp.Units, orderBook.LimitUp.Nano,
-		orderBook.LimitDown.Units, orderBook.LimitDown.Nano,
-	)
+
+	priceIsOK := tw.priceIsOkToSell(*orderBook)
+	if !priceIsOK {
+		tw.logger.Debug("price is not OK to sell")
+		return // wait for the next turn
+	}
 
 	order, err := services.SandboxService.PostSandboxOrder(
 		&pb.PostOrderRequest{
 			Figi:      tw.Figi,
 			OrderId:   uuid.New().String(),
-			Quantity:  int64(tw.config.AmountToBuy),
+			Quantity:  int64(tw.config.LotsToBuy),
 			Price:     orderBook.LastPrice,
 			AccountId: tw.accountID,
 			OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
@@ -218,8 +192,11 @@ func (tw *TradeWorker) tryToSellInstrument() {
 	}
 
 	tw.orderID = order.OrderId
+	tw.orderPrice = order.InitialOrderPrice
 	tw.logger.With("order_id", tw.orderID).
-		Infof("sell order created, current status: %s", order.ExecutionReportStatus.String())
+		Infof("sell order created, initial price: %d.%d %s, current status: %s",
+			order.InitialOrderPrice.Units, order.InitialOrderPrice.Nano,
+			order.InitialOrderPrice.Currency, order.ExecutionReportStatus.String())
 
 	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
 		pb.OrderDirection_ORDER_DIRECTION_SELL.String()).Inc()
@@ -238,18 +215,21 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 		tw.logger.Errorf("error getting order book: %v", err)
 		return // just ignoring it
 	}
-	tw.logger.Infof("last price: %d.%d, close price: %d.%d, limit up: %d.%d, limit down: %d.%d",
-		orderBook.LastPrice.Units, orderBook.LastPrice.Nano,
-		orderBook.ClosePrice.Units, orderBook.ClosePrice.Nano,
-		orderBook.LimitUp.Units, orderBook.LimitUp.Nano,
-		orderBook.LimitDown.Units, orderBook.LimitDown.Nano,
-	)
+
+	closePrice := utils.QuotationToFloat(*orderBook.ClosePrice)
+	lastPrice := utils.QuotationToFloat(*orderBook.LastPrice)
+	limitUp := utils.QuotationToFloat(*orderBook.LimitUp)
+	limitDown := utils.QuotationToFloat(*orderBook.LimitDown)
+
+	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
+	tw.logger.Infof("last price: %f, close price: %f limit up: %f, limit down: %f",
+		lastPrice, closePrice, limitUp, limitDown)
 
 	order, err := services.SandboxService.PostSandboxOrder(
 		&pb.PostOrderRequest{
 			Figi:      tw.Figi,
 			OrderId:   uuid.New().String(),
-			Quantity:  int64(tw.config.AmountToBuy),
+			Quantity:  int64(tw.config.LotsToBuy),
 			Price:     orderBook.LastPrice,
 			AccountId: tw.accountID,
 			OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
@@ -262,8 +242,11 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 	}
 
 	tw.orderID = order.OrderId
+	tw.orderPrice = order.InitialOrderPrice
 	tw.logger.With("order_id", tw.orderID).
-		Infof("buy order created, current status: %s", order.ExecutionReportStatus.String())
+		Infof("buy order created, initial price: %d.%d %s, current status: %s",
+			order.InitialOrderPrice.Units, order.InitialOrderPrice.Nano,
+			order.InitialOrderPrice.Currency, order.ExecutionReportStatus.String())
 
 	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
 		pb.OrderDirection_ORDER_DIRECTION_BUY.String()).Inc()
@@ -313,10 +296,10 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 		return false, nil
 	}
 
-	si := techan.NewTrendlineIndicator(techan.NewClosePriceIndicator(candlesToTimeSeries(shortCandles)), len(shortCandles)-3)
+	si := techan.NewTrendlineIndicator(techan.NewClosePriceIndicator(utils.CandlesToTimeSeries(shortCandles)), len(shortCandles)-3)
 	shortTrend := si.Calculate(len(shortCandles) - 4).Float()
 
-	li := techan.NewTrendlineIndicator(techan.NewClosePriceIndicator(candlesToTimeSeries(longCandles)), len(longCandles)-3)
+	li := techan.NewTrendlineIndicator(techan.NewClosePriceIndicator(utils.CandlesToTimeSeries(longCandles)), len(longCandles)-3)
 	longTrend := li.Calculate(len(longCandles) - 4).Float()
 
 	tw.logger.Debugf("calculated short trend: %f, expected: %f", shortTrend, tw.config.ShortTrendToTrade)
@@ -329,7 +312,21 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 	return false, nil
 }
 
-func (tw *TradeWorker) priceIsOkToSell() (bool, error) {
-	// TODO: implementation
-	return true, nil
+func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
+	expectedProfit := utils.MoneyValueToFloat(*tw.orderPrice) * tw.config.TakeProfitCoef
+	expectedLoss := utils.MoneyValueToFloat(*tw.orderPrice) * tw.config.StopLossCoef
+
+	closePrice := utils.QuotationToFloat(*orderBook.ClosePrice)
+	lastPrice := utils.QuotationToFloat(*orderBook.LastPrice)
+	limitUp := utils.QuotationToFloat(*orderBook.LimitUp)
+	limitDown := utils.QuotationToFloat(*orderBook.LimitDown)
+
+	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
+	tw.logger.Infof("expected price: %f, last: %f, close: %f limit up: %f, limit down: %f, stop loss: %f",
+		expectedProfit, lastPrice, closePrice, limitUp, limitDown, expectedLoss)
+
+	if closePrice < expectedLoss || closePrice > expectedProfit {
+		return true
+	}
+	return false
 }
