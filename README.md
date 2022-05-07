@@ -2,7 +2,7 @@
 
 [![CI-CD](https://github.com/elkopass/BITA/actions/workflows/main.yml/badge.svg)](https://github.com/elkopass/BITA/actions/workflows/main.yml)
 
-Trading **B**ot based on [**T**inkoff **I**nvest **A**PI](https://github.com/Tinkoff/investAPI)
+Trading **B**ot based on [**I**nvest **T**inkoff **A**PI](https://github.com/Tinkoff/investAPI)
 
 ![TradeBot logo](logo.png)
 
