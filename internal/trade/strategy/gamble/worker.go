@@ -6,7 +6,7 @@ import (
 	"github.com/elkopass/BITA/internal/loggy"
 	"github.com/elkopass/BITA/internal/metrics"
 	pb "github.com/elkopass/BITA/internal/proto"
-	"github.com/elkopass/BITA/internal/trade/utils"
+	tradeutil "github.com/elkopass/BITA/internal/trade/util"
 	"github.com/google/uuid"
 	"github.com/sdcoffey/techan"
 	"go.uber.org/zap"
@@ -64,7 +64,7 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 					tw.orderID = ""
 					tw.orderPrice = nil
 					tw.sellFlag = !tw.sellFlag
-					tw.checkPortfolio()
+					go tw.checkPortfolio()
 				} else {
 					tw.logger.With("order_id", tw.orderID).Debug("order is still placed")
 				}
@@ -77,7 +77,9 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 				tw.tryToBuyInstrument()
 			}
 		case <-ctx.Done():
+			// TODO: implement sell logic on interrupt
 			tw.logger.Info("worker stopped!")
+
 			return nil
 		}
 	}
@@ -90,31 +92,31 @@ func (tw *TradeWorker) checkPortfolio() {
 		return // just ignoring it
 	}
 
-	tw.logger.Info("positions: ", utils.GetFormattedPositions(portfolio.Positions))
+	tw.logger.Info("positions: ", tradeutil.GetFormattedPositions(portfolio.Positions))
 
 	for _, p := range portfolio.Positions {
 		if p.CurrentPrice != nil {
-			metrics.PortfolioPositionCurrentPrice.WithLabelValues(tw.accountID, tw.Figi).Set(utils.MoneyValueToFloat(*p.CurrentPrice))
+			metrics.PortfolioPositionCurrentPrice.WithLabelValues(tw.accountID, tw.Figi).Set(tradeutil.MoneyValueToFloat(*p.CurrentPrice))
 		}
 		if p.ExpectedYield != nil {
-			metrics.PortfolioPositionExpectedYield.WithLabelValues(tw.accountID, tw.Figi).Set(utils.QuotationToFloat(*p.ExpectedYield))
+			metrics.PortfolioPositionExpectedYield.WithLabelValues(tw.accountID, tw.Figi).Set(tradeutil.QuotationToFloat(*p.ExpectedYield))
 		}
 	}
 
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "bonds",
-		portfolio.TotalAmountBonds.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountBonds))
+		portfolio.TotalAmountBonds.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountBonds))
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "currencies",
-		portfolio.TotalAmountCurrencies.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountCurrencies))
+		portfolio.TotalAmountCurrencies.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountCurrencies))
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "etfs",
-		portfolio.TotalAmountEtf.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountEtf))
+		portfolio.TotalAmountEtf.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountEtf))
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "futures",
-		portfolio.TotalAmountFutures.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountFutures))
+		portfolio.TotalAmountFutures.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountFutures))
 	metrics.PortfolioInstrumentsAmount.WithLabelValues(tw.accountID, "shares",
-		portfolio.TotalAmountShares.Currency).Set(utils.MoneyValueToFloat(*portfolio.TotalAmountShares))
+		portfolio.TotalAmountShares.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountShares))
 
 	if portfolio.ExpectedYield != nil {
 		tw.logger.Infof("expected yield: %d.%d", portfolio.ExpectedYield.Units, portfolio.ExpectedYield.Nano)
-		metrics.PortfolioExpectedYieldOverall.WithLabelValues(tw.accountID).Set(utils.QuotationToFloat(*portfolio.ExpectedYield))
+		metrics.PortfolioExpectedYieldOverall.WithLabelValues(tw.accountID).Set(tradeutil.QuotationToFloat(*portfolio.ExpectedYield))
 	}
 }
 
@@ -216,10 +218,10 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 		return // just ignoring it
 	}
 
-	closePrice := utils.QuotationToFloat(*orderBook.ClosePrice)
-	lastPrice := utils.QuotationToFloat(*orderBook.LastPrice)
-	limitUp := utils.QuotationToFloat(*orderBook.LimitUp)
-	limitDown := utils.QuotationToFloat(*orderBook.LimitDown)
+	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
+	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
+	limitUp := tradeutil.QuotationToFloat(*orderBook.LimitUp)
+	limitDown := tradeutil.QuotationToFloat(*orderBook.LimitDown)
 
 	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
 	tw.logger.Infof("last price: %f, close price: %f limit up: %f, limit down: %f",
@@ -296,10 +298,10 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 		return false, nil
 	}
 
-	si := techan.NewTrendlineIndicator(techan.NewClosePriceIndicator(utils.CandlesToTimeSeries(shortCandles)), len(shortCandles)-3)
+	si := techan.NewTrendlineIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(shortCandles)), len(shortCandles)-3)
 	shortTrend := si.Calculate(len(shortCandles) - 4).Float()
 
-	li := techan.NewTrendlineIndicator(techan.NewClosePriceIndicator(utils.CandlesToTimeSeries(longCandles)), len(longCandles)-3)
+	li := techan.NewTrendlineIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(longCandles)), len(longCandles)-3)
 	longTrend := li.Calculate(len(longCandles) - 4).Float()
 
 	tw.logger.Debugf("calculated short trend: %f, expected: %f", shortTrend, tw.config.ShortTrendToTrade)
@@ -313,13 +315,13 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 }
 
 func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
-	expectedProfit := utils.MoneyValueToFloat(*tw.orderPrice) * tw.config.TakeProfitCoef
-	expectedLoss := utils.MoneyValueToFloat(*tw.orderPrice) * tw.config.StopLossCoef
+	expectedProfit := tradeutil.MoneyValueToFloat(*tw.orderPrice) * tw.config.TakeProfitCoef
+	expectedLoss := tradeutil.MoneyValueToFloat(*tw.orderPrice) * tw.config.StopLossCoef
 
-	closePrice := utils.QuotationToFloat(*orderBook.ClosePrice)
-	lastPrice := utils.QuotationToFloat(*orderBook.LastPrice)
-	limitUp := utils.QuotationToFloat(*orderBook.LimitUp)
-	limitDown := utils.QuotationToFloat(*orderBook.LimitDown)
+	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
+	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
+	limitUp := tradeutil.QuotationToFloat(*orderBook.LimitUp)
+	limitDown := tradeutil.QuotationToFloat(*orderBook.LimitDown)
 
 	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
 	tw.logger.Infof("expected price: %f, last: %f, close: %f limit up: %f, limit down: %f, stop loss: %f",

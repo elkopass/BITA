@@ -1,4 +1,4 @@
-package utils
+package util
 
 import (
 	"fmt"
@@ -54,4 +54,3 @@ func GetFormattedPositions(positions []*pb.PortfolioPosition) string {
 
 	return formattedPositions
 }
-

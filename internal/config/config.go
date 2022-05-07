@@ -10,7 +10,7 @@ const (
 	ApiURL  = "invest-public-api.tinkoff.ru:443"
 	AppName = "elkopass.BITA"
 
-	DefaultRequestTimeout   = 30 * time.Second
+	DefaultRequestTimeout = 30 * time.Second
 )
 
 type tradeBotConfig struct {

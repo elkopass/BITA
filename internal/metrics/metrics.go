@@ -64,7 +64,7 @@ var (
 	}, []string{"account_id", "figi"})
 )
 
-func init()  {
+func init() {
 	/* sdk related metrics */
 	prometheus.MustRegister(ApiRequests)
 	prometheus.MustRegister(ApiCallErrors)
