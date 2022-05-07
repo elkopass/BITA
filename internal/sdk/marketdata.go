@@ -46,6 +46,7 @@ func (mds MarketDataService) GetCandles(figi string, from, to *timestamp.Timesta
 		Interval: interval,
 	})
 	if err != nil {
+		mds.incrementApiCallErrors("GetCandles", err.Error())
 		return nil, err
 	}
 
@@ -61,6 +62,7 @@ func (mds MarketDataService) GetLastPrices(figi []string) ([]*pb.LastPrice, erro
 		Figi: figi,
 	})
 	if err != nil {
+		mds.incrementApiCallErrors("GetLastPrices", err.Error())
 		return nil, err
 	}
 
@@ -77,6 +79,7 @@ func (mds MarketDataService) GetOrderBook(figi string, depth int) (*pb.GetOrderB
 		Depth: int32(depth),
 	})
 	if err != nil {
+		mds.incrementApiCallErrors("GetOrderBook", err.Error())
 		return nil, err
 	}
 
@@ -92,6 +95,7 @@ func (mds MarketDataService) GetTradingStatus(figi string) (*pb.GetTradingStatus
 		Figi: figi,
 	})
 	if err != nil {
+		mds.incrementApiCallErrors("GetTradingStatus", err.Error())
 		return nil, err
 	}
 
@@ -109,6 +113,7 @@ func (mds MarketDataService) GetLastTrades(figi string, from, to *timestamp.Time
 		To:   to,
 	})
 	if err != nil {
+		mds.incrementApiCallErrors("GetLastTrades", err.Error())
 		return nil, err
 	}
 
@@ -117,4 +122,8 @@ func (mds MarketDataService) GetLastTrades(figi string, from, to *timestamp.Time
 
 func (mds MarketDataService) incrementRequestsCounter(method string) {
 	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "MarketDataService", method).Inc()
+}
+
+func (mds MarketDataService) incrementApiCallErrors(method string, error string) {
+	metrics.ApiCallErrors.WithLabelValues(loggy.GetBotID(), "MarketDataService", method, error).Inc()
 }

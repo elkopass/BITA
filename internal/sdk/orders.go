@@ -39,6 +39,7 @@ func (os OrdersService) PostOrder(order *pb.PostOrderRequest) (*pb.PostOrderResp
 	os.incrementRequestsCounter("PostOrder")
 	res, err := os.client.PostOrder(ctx, order)
 	if err != nil {
+		os.incrementApiCallErrors("PostOrder", err.Error())
 		return nil, err
 	}
 
@@ -55,6 +56,7 @@ func (os OrdersService) CancelOrder(accountID string, orderID string) (*timestam
 		OrderId:   orderID,
 	})
 	if err != nil {
+		os.incrementApiCallErrors("CancelOrder", err.Error())
 		return nil, err
 	}
 
@@ -71,6 +73,7 @@ func (os OrdersService) GetOrderState(accountID string, orderID string) (*pb.Ord
 		OrderId:   orderID,
 	})
 	if err != nil {
+		os.incrementApiCallErrors("GetOrderState", err.Error())
 		return nil, err
 	}
 
@@ -86,6 +89,7 @@ func (os OrdersService) GetOrders(accountID string) ([]*pb.OrderState, error) {
 		AccountId: accountID,
 	})
 	if err != nil {
+		os.incrementApiCallErrors("GetOrders", err.Error())
 		return nil, err
 	}
 
@@ -94,4 +98,8 @@ func (os OrdersService) GetOrders(accountID string) ([]*pb.OrderState, error) {
 
 func (os OrdersService) incrementRequestsCounter(method string) {
 	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "OrdersService", method).Inc()
+}
+
+func (os OrdersService) incrementApiCallErrors(method string, error string) {
+	metrics.ApiCallErrors.WithLabelValues(loggy.GetBotID(), "OrdersService", method, error).Inc()
 }

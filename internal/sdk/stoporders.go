@@ -37,6 +37,7 @@ func (sos StopOrdersService) PostStopOrder(stopOrder *pb.PostStopOrderRequest) (
 	sos.incrementRequestsCounter("PostStopOrder")
 	res, err := sos.client.PostStopOrder(ctx, stopOrder)
 	if err != nil {
+		sos.incrementApiCallErrors("PostStopOrder", err.Error())
 		return "", err
 	}
 
@@ -52,6 +53,7 @@ func (sos StopOrdersService) GetStopOrders(accountID string) ([]*pb.StopOrder, e
 		AccountId: accountID,
 	})
 	if err != nil {
+		sos.incrementApiCallErrors("GetStopOrders", err.Error())
 		return nil, err
 	}
 
@@ -68,6 +70,7 @@ func (sos StopOrdersService) CancelStopOrder(accountID string, stopOrderID strin
 		StopOrderId: stopOrderID,
 	})
 	if err != nil {
+		sos.incrementApiCallErrors("CancelStopOrder", err.Error())
 		return nil, err
 	}
 
@@ -76,4 +79,8 @@ func (sos StopOrdersService) CancelStopOrder(accountID string, stopOrderID strin
 
 func (sos StopOrdersService) incrementRequestsCounter(method string) {
 	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "StopOrdersService", method).Inc()
+}
+
+func (sos StopOrdersService) incrementApiCallErrors(method string, error string) {
+	metrics.ApiCallErrors.WithLabelValues(loggy.GetBotID(), "StopOrdersService", method, error).Inc()
 }

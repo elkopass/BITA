@@ -75,6 +75,7 @@ func (is InstrumentsService) TradingSchedules(exchange string, from, to *timesta
 		To:       to,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("TradingSchedules", err.Error())
 		return nil, err
 	}
 
@@ -88,6 +89,7 @@ func (is InstrumentsService) BondBy(filters pb.InstrumentRequest) (*pb.Bond, err
 	is.incrementRequestsCounter("BondBy")
 	res, err := is.client.BondBy(ctx, &filters)
 	if err != nil {
+		is.incrementApiCallErrors("BondBy", err.Error())
 		return nil, err
 	}
 
@@ -103,6 +105,7 @@ func (is InstrumentsService) Bonds(status pb.InstrumentStatus) ([]*pb.Bond, erro
 		InstrumentStatus: status,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("Bonds", err.Error())
 		return nil, err
 	}
 
@@ -120,6 +123,7 @@ func (is InstrumentsService) GetBondCoupons(figi string, from, to *timestamp.Tim
 		To:   to,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("GetBoundCoupons", err.Error())
 		return nil, err
 	}
 
@@ -133,6 +137,7 @@ func (is InstrumentsService) CurrencyBy(filters pb.InstrumentRequest) (*pb.Curre
 	is.incrementRequestsCounter("CurrencyBy")
 	res, err := is.client.CurrencyBy(ctx, &filters)
 	if err != nil {
+		is.incrementApiCallErrors("CurrencyBy", err.Error())
 		return nil, err
 	}
 
@@ -148,6 +153,7 @@ func (is InstrumentsService) Currencies(status pb.InstrumentStatus) ([]*pb.Curre
 		InstrumentStatus: status,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("Currencies", err.Error())
 		return nil, err
 	}
 
@@ -161,6 +167,7 @@ func (is InstrumentsService) EtfBy(filters pb.InstrumentRequest) (*pb.Etf, error
 	is.incrementRequestsCounter("EtfBy")
 	res, err := is.client.EtfBy(ctx, &filters)
 	if err != nil {
+		is.incrementApiCallErrors("EtfBy", err.Error())
 		return nil, err
 	}
 
@@ -176,6 +183,7 @@ func (is InstrumentsService) Etfs(status pb.InstrumentStatus) ([]*pb.Etf, error)
 		InstrumentStatus: status,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("Etfs", err.Error())
 		return nil, err
 	}
 
@@ -189,6 +197,7 @@ func (is InstrumentsService) FutureBy(filters pb.InstrumentRequest) (*pb.Future,
 	is.incrementRequestsCounter("FutureBy")
 	res, err := is.client.FutureBy(ctx, &filters)
 	if err != nil {
+		is.incrementApiCallErrors("FutureBy", err.Error())
 		return nil, err
 	}
 
@@ -204,6 +213,7 @@ func (is InstrumentsService) Futures(status pb.InstrumentStatus) ([]*pb.Future, 
 		InstrumentStatus: status,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("Futures", err.Error())
 		return nil, err
 	}
 
@@ -217,6 +227,7 @@ func (is InstrumentsService) ShareBy(filters pb.InstrumentRequest) (*pb.Share, e
 	is.incrementRequestsCounter("ShareBy")
 	res, err := is.client.ShareBy(ctx, &filters)
 	if err != nil {
+		is.incrementApiCallErrors("ShareBy", err.Error())
 		return nil, err
 	}
 
@@ -232,6 +243,7 @@ func (is InstrumentsService) Shares(status pb.InstrumentStatus) ([]*pb.Share, er
 		InstrumentStatus: status,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("Shares", err.Error())
 		return nil, err
 	}
 
@@ -249,6 +261,7 @@ func (is InstrumentsService) GetAccruedInterests(figi string, from, to *timestam
 		To:   to,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("GetAccruedInterests", err.Error())
 		return nil, err
 	}
 
@@ -264,6 +277,7 @@ func (is InstrumentsService) GetFuturesMargin(figi string) (*pb.GetFuturesMargin
 		Figi: figi,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("GetFuturesMargin", err.Error())
 		return nil, err
 	}
 
@@ -277,6 +291,7 @@ func (is InstrumentsService) GetInstrumentBy(filters pb.InstrumentRequest) (*pb.
 	is.incrementRequestsCounter("GetInstrumentBy")
 	res, err := is.client.GetInstrumentBy(ctx, &filters)
 	if err != nil {
+		is.incrementApiCallErrors("GetInstrumentBy", err.Error())
 		return nil, err
 	}
 
@@ -294,6 +309,7 @@ func (is InstrumentsService) GetDividends(figi string, from, to *timestamp.Times
 		To:   to,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("GetDividends", err.Error())
 		return nil, err
 	}
 
@@ -309,6 +325,7 @@ func (is InstrumentsService) GetAssetBy(assetID string) (*pb.AssetFull, error) {
 		Id: assetID,
 	})
 	if err != nil {
+		is.incrementApiCallErrors("GetAssetBy", err.Error())
 		return nil, err
 	}
 
@@ -322,6 +339,7 @@ func (is InstrumentsService) GetAssets() ([]*pb.Asset, error) {
 	is.incrementRequestsCounter("GetAssets")
 	res, err := is.client.GetAssets(ctx, &pb.AssetsRequest{})
 	if err != nil {
+		is.incrementApiCallErrors("GetAssets", err.Error())
 		return nil, err
 	}
 
@@ -335,6 +353,7 @@ func (is InstrumentsService) GetFavorites() ([]*pb.FavoriteInstrument, error) {
 	is.incrementRequestsCounter("GetFavourites")
 	res, err := is.client.GetFavorites(ctx, &pb.GetFavoritesRequest{})
 	if err != nil {
+		is.incrementApiCallErrors("GetFavourites", err.Error())
 		return nil, err
 	}
 
@@ -348,6 +367,7 @@ func (is InstrumentsService) EditFavorites(newFavourites *pb.EditFavoritesReques
 	is.incrementRequestsCounter("EditFavorites")
 	res, err := is.client.EditFavorites(ctx, newFavourites)
 	if err != nil {
+		is.incrementApiCallErrors("EditFavorites", err.Error())
 		return nil, err
 	}
 
@@ -356,4 +376,8 @@ func (is InstrumentsService) EditFavorites(newFavourites *pb.EditFavoritesReques
 
 func (is InstrumentsService) incrementRequestsCounter(method string) {
 	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "InstrumentsService", method).Inc()
+}
+
+func (is InstrumentsService) incrementApiCallErrors(method string, error string) {
+	metrics.ApiCallErrors.WithLabelValues(loggy.GetBotID(), "InstrumentsService", method, error).Inc()
 }

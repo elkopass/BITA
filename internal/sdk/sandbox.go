@@ -53,10 +53,11 @@ func (ss SandboxService) OpenSandboxAccount() (string, error) {
 	ss.incrementRequestsCounter("OpenSandboxAccount")
 	res, err := ss.client.OpenSandboxAccount(ctx, &pb.OpenSandboxAccountRequest{})
 	if err != nil {
+		ss.incrementApiCallErrors("OpenSandboxAccount", err.Error())
 		return "", err
 	}
 
-	return string(res.AccountId), nil
+	return res.AccountId, nil
 }
 
 func (ss SandboxService) GetSandboxAccounts() ([]*pb.Account, error) {
@@ -66,6 +67,7 @@ func (ss SandboxService) GetSandboxAccounts() ([]*pb.Account, error) {
 	ss.incrementRequestsCounter("GetSandboxAccounts")
 	res, err := ss.client.GetSandboxAccounts(ctx, &pb.GetAccountsRequest{})
 	if err != nil {
+		ss.incrementApiCallErrors("GetSandboxAccounts", err.Error())
 		return nil, err
 	}
 
@@ -80,7 +82,12 @@ func (ss SandboxService) CloseSandboxAccount(accountID string) error {
 	_, err := ss.client.CloseSandboxAccount(ctx, &pb.CloseSandboxAccountRequest{
 		AccountId: accountID,
 	})
-	return err
+	if err != nil {
+		ss.incrementApiCallErrors("CloseSandboxAccount", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (ss SandboxService) PostSandboxOrder(order *pb.PostOrderRequest) (*pb.PostOrderResponse, error) {
@@ -90,6 +97,7 @@ func (ss SandboxService) PostSandboxOrder(order *pb.PostOrderRequest) (*pb.PostO
 	ss.incrementRequestsCounter("PostSandboxOrder")
 	res, err := ss.client.PostSandboxOrder(ctx, order)
 	if err != nil {
+		ss.incrementApiCallErrors("PostSandboxOrder", err.Error())
 		return nil, err
 	}
 
@@ -105,6 +113,7 @@ func (ss SandboxService) GetSandboxOrders(accountID string) ([]*pb.OrderState, e
 		AccountId: accountID,
 	})
 	if err != nil {
+		ss.incrementApiCallErrors("GetSandboxOrders", err.Error())
 		return nil, err
 	}
 
@@ -121,6 +130,7 @@ func (ss SandboxService) CancelSandboxOrder(accountID string, orderID string) (*
 		OrderId:   orderID,
 	})
 	if err != nil {
+		ss.incrementApiCallErrors("CancelSandboxOrder", err.Error())
 		return nil, err
 	}
 
@@ -137,6 +147,7 @@ func (ss SandboxService) GetSandboxOrderState(accountID string, orderID string) 
 		OrderId:   orderID,
 	})
 	if err != nil {
+		ss.incrementApiCallErrors("GetSandboxOrderState", err.Error())
 		return nil, err
 	}
 
@@ -152,6 +163,7 @@ func (ss SandboxService) GetSandboxPositions(accountID string) (*pb.PositionsRes
 		AccountId: accountID,
 	})
 	if err != nil {
+		ss.incrementApiCallErrors("GetSandboxPositions", err.Error())
 		return nil, err
 	}
 
@@ -165,6 +177,7 @@ func (ss SandboxService) GetSandboxOperations(filter *pb.OperationsRequest) ([]*
 	ss.incrementRequestsCounter("GetSandboxOperations")
 	res, err := ss.client.GetSandboxOperations(ctx, filter)
 	if err != nil {
+		ss.incrementApiCallErrors("GetSandboxOperations", err.Error())
 		return nil, err
 	}
 
@@ -180,6 +193,7 @@ func (ss SandboxService) GetSandboxPortfolio(accountID string) (*pb.PortfolioRes
 		AccountId: accountID,
 	})
 	if err != nil {
+		ss.incrementApiCallErrors("GetSandboxPortfolio", err.Error())
 		return nil, err
 	}
 
@@ -196,6 +210,7 @@ func (ss SandboxService) SandboxPayIn(accountID string, amount *pb.MoneyValue) (
 		Amount:    amount,
 	})
 	if err != nil {
+		ss.incrementApiCallErrors("SandboxPayIn", err.Error())
 		return nil, err
 	}
 
@@ -204,4 +219,8 @@ func (ss SandboxService) SandboxPayIn(accountID string, amount *pb.MoneyValue) (
 
 func (ss SandboxService) incrementRequestsCounter(method string) {
 	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "SandboxService", method).Inc()
+}
+
+func (ss SandboxService) incrementApiCallErrors(method string, error string) {
+	metrics.ApiCallErrors.WithLabelValues(loggy.GetBotID(), "SandboxService", method, error).Inc()
 }

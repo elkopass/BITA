@@ -38,6 +38,7 @@ func (us UsersService) GetAccounts() ([]*pb.Account, error) {
 	us.incrementRequestsCounter("GetAccounts")
 	res, err := us.client.GetAccounts(ctx, &pb.GetAccountsRequest{})
 	if err != nil {
+		us.incrementApiCallErrors("GetAccounts", err.Error())
 		return nil, err
 	}
 
@@ -53,6 +54,7 @@ func (us UsersService) GetMarginAttributes(accountID string) (*pb.GetMarginAttri
 		AccountId: accountID,
 	})
 	if err != nil {
+		us.incrementApiCallErrors("GetMarginAttributes", err.Error())
 		return nil, err
 	}
 
@@ -66,6 +68,7 @@ func (us UsersService) GetUserTariff() (*pb.GetUserTariffResponse, error) {
 	us.incrementRequestsCounter("GetUserTariff")
 	res, err := us.client.GetUserTariff(ctx, &pb.GetUserTariffRequest{})
 	if err != nil {
+		us.incrementApiCallErrors("GetUserTariff", err.Error())
 		return nil, err
 	}
 
@@ -79,6 +82,7 @@ func (us UsersService) GetInfo() (*pb.GetInfoResponse, error) {
 	us.incrementRequestsCounter("GetInfo")
 	res, err := us.client.GetInfo(ctx, &pb.GetInfoRequest{})
 	if err != nil {
+		us.incrementApiCallErrors("GetInfo", err.Error())
 		return nil, err
 	}
 
@@ -87,4 +91,8 @@ func (us UsersService) GetInfo() (*pb.GetInfoResponse, error) {
 
 func (us UsersService) incrementRequestsCounter(method string) {
 	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "UsersService", method).Inc()
+}
+
+func (us UsersService) incrementApiCallErrors(method string, error string) {
+	metrics.ApiCallErrors.WithLabelValues(loggy.GetBotID(), "UsersService", method, error).Inc()
 }

@@ -45,6 +45,7 @@ func (os OperationsService) GetOperations(accountID string, from, to *timestamp.
 		Figi:      figi,
 	})
 	if err != nil {
+		os.incrementApiCallErrors("GetOperations", err.Error())
 		return nil, err
 	}
 
@@ -60,6 +61,7 @@ func (os OperationsService) GetPortfolio(accountID string) (*pb.PortfolioRespons
 		AccountId: accountID,
 	})
 	if err != nil {
+		os.incrementApiCallErrors("GetPortfolio", err.Error())
 		return nil, err
 	}
 
@@ -75,6 +77,7 @@ func (os OperationsService) GetPositions(accountID string) (*pb.PositionsRespons
 		AccountId: accountID,
 	})
 	if err != nil {
+		os.incrementApiCallErrors("GetPositions", err.Error())
 		return nil, err
 	}
 
@@ -90,6 +93,7 @@ func (os OperationsService) GetWithdrawLimits(accountID string) (*pb.WithdrawLim
 		AccountId: accountID,
 	})
 	if err != nil {
+		os.incrementApiCallErrors("GetWithdrawLimits", err.Error())
 		return nil, err
 	}
 
@@ -98,4 +102,8 @@ func (os OperationsService) GetWithdrawLimits(accountID string) (*pb.WithdrawLim
 
 func (os OperationsService) incrementRequestsCounter(method string) {
 	metrics.ApiRequests.WithLabelValues(loggy.GetBotID(), "OperationsService", method).Inc()
+}
+
+func (os OperationsService) incrementApiCallErrors(method string, error string) {
+	metrics.ApiCallErrors.WithLabelValues(loggy.GetBotID(), "OperationsService", method, error).Inc()
 }
