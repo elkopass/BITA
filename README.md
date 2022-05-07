@@ -20,7 +20,7 @@ using [envconfig](https://github.com/kelseyhightower/envconfig) library.
 You can find full list of them in our 
 [.env-example](https://github.com/elkopass/BITA/blob/main/cmd/trade-bot/.env-example) file.
 
-Right before we started, obtain your API token in 
+Right before we started, obtain your Tinkoff Invest API token in 
 [settings](https://www.tinkoff.ru/invest/settings/) and set it as follows: `TRADEBOT_TOKEN=<your_api_token>`.
 
 ### Using Docker
@@ -49,7 +49,10 @@ $ go build -a -o trade-bot ./cmd/trade-bot
 $ ./trade-bot
 ``` 
 
-## License
+## Disclaimer
+
+The developers are NOT RESPONSIBLE for any financial losses incurred 
+during the use of the trading bot.
 
 This project is released under the MIT license. 
 See [LICENSE](https://github.com/elkopass/BITA/blob/main/LICENSE) for details.
