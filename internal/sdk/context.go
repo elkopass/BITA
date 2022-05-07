@@ -3,7 +3,7 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/config"
+	"github.com/elkopass/BITA/internal/config"
 	"github.com/google/uuid"
 	grpcMetadata "google.golang.org/grpc/metadata"
 )

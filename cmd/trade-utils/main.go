@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
-	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
+	"github.com/elkopass/BITA/internal/loggy"
+	pb "github.com/elkopass/BITA/internal/proto"
+	"github.com/elkopass/BITA/internal/sdk"
 )
 
 func main() {

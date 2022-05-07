@@ -1,9 +1,9 @@
 package sdk
 
 import (
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/metrics"
-	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
+	"github.com/elkopass/BITA/internal/loggy"
+	"github.com/elkopass/BITA/internal/metrics"
+	pb "github.com/elkopass/BITA/internal/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 )
 

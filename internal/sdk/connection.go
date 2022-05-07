@@ -2,7 +2,7 @@ package sdk
 
 import (
 	"crypto/tls"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/config"
+	"github.com/elkopass/BITA/internal/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

@@ -1,8 +1,8 @@
-# TinkoffInvestRobotContest
+# BITA
 
-[![CI-CD](https://github.com/elkopass/TinkoffInvestRobotContest/actions/workflows/main.yml/badge.svg)](https://github.com/elkopass/TinkoffInvestRobotContest/actions/workflows/main.yml)
+[![CI-CD](https://github.com/elkopass/BITA/actions/workflows/main.yml/badge.svg)](https://github.com/elkopass/BITA/actions/workflows/main.yml)
 
-Trading Bot based on [Tinkoff Invest API](https://github.com/Tinkoff/investAPI)
+Trading **B**ot based on [**T**inkoff **I**nvest **A**PI](https://github.com/Tinkoff/investAPI)
 
 ![TradeBot logo](logo.png)
 
@@ -11,14 +11,14 @@ Trading Bot based on [Tinkoff Invest API](https://github.com/Tinkoff/investAPI)
 Clone this repository first, and we are ready to go.
 
 ```shell script
-$ git clone https://github.com/elkopass/TinkoffInvestRobotContest
+$ git clone https://github.com/elkopass/BITA
 ```
 
 This bot is fully configurable with environment variables 
 using [envconfig](https://github.com/kelseyhightower/envconfig) library.
 
 You can find full list of them in our 
-[.env-example](https://github.com/elkopass/TinkoffInvestRobotContest/blob/main/cmd/trade-bot/.env-example) file.
+[.env-example](https://github.com/elkopass/BITA/blob/main/cmd/trade-bot/.env-example) file.
 
 Right before we started, obtain your API token in 
 [settings](https://www.tinkoff.ru/invest/settings/) and set it as follows: `TRADEBOT_TOKEN=<your_api_token>`.
@@ -52,4 +52,4 @@ $ ./trade-bot
 ## License
 
 This project is released under the MIT license. 
-See [LICENSE](https://github.com/elkopass/TinkoffInvestRobotContest/blob/main/LICENSE) for details.
+See [LICENSE](https://github.com/elkopass/BITA/blob/main/LICENSE) for details.

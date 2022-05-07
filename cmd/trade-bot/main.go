@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/config"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/trade"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/trade/strategy"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/trade/strategy/gamble"
+	"github.com/elkopass/BITA/internal/config"
+	"github.com/elkopass/BITA/internal/loggy"
+	"github.com/elkopass/BITA/internal/trade"
+	"github.com/elkopass/BITA/internal/trade/strategy"
+	"github.com/elkopass/BITA/internal/trade/strategy/gamble"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"os"

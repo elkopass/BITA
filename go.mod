@@ -1,4 +1,4 @@
-module github.com/elkopass/TinkoffInvestRobotContest
+module github.com/elkopass/BITA
 
 go 1.16
 

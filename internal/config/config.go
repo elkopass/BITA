@@ -1,14 +1,14 @@
 package config
 
 import (
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/BITA/internal/loggy"
 	"github.com/kelseyhightower/envconfig"
 	"time"
 )
 
 const (
 	ApiURL  = "invest-public-api.tinkoff.ru:443"
-	AppName = "elkopass.TinkoffInvestRobotContest"
+	AppName = "elkopass.BITA"
 
 	DefaultRequestTimeout   = 30 * time.Second
 )

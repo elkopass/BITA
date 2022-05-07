@@ -2,8 +2,8 @@ package gamble
 
 import (
 	"context"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/config"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
+	"github.com/elkopass/BITA/internal/config"
+	"github.com/elkopass/BITA/internal/loggy"
 	"go.uber.org/zap"
 	"sync"
 )

@@ -1,8 +1,8 @@
 package sdk
 
 import (
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
-	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
+	"github.com/elkopass/BITA/internal/loggy"
+	pb "github.com/elkopass/BITA/internal/proto"
 )
 
 type OrdersStreamInterface interface {

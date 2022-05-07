@@ -1,8 +1,8 @@
 package gamble
 
 import (
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/loggy"
-	"github.com/elkopass/TinkoffInvestRobotContest/internal/sdk"
+	"github.com/elkopass/BITA/internal/loggy"
+	"github.com/elkopass/BITA/internal/sdk"
 	"github.com/kelseyhightower/envconfig"
 )
 

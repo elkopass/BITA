@@ -2,7 +2,7 @@ package gamble
 
 import (
 	"fmt"
-	pb "github.com/elkopass/TinkoffInvestRobotContest/internal/proto"
+	pb "github.com/elkopass/BITA/internal/proto"
 	"github.com/sdcoffey/big"
 	"github.com/sdcoffey/techan"
 	"strconv"
