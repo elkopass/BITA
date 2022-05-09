@@ -3,6 +3,7 @@ package gamble
 import (
 	"context"
 	"errors"
+	"github.com/elkopass/BITA/internal/config"
 	"github.com/elkopass/BITA/internal/loggy"
 	"github.com/elkopass/BITA/internal/metrics"
 	pb "github.com/elkopass/BITA/internal/proto"
@@ -67,6 +68,7 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 					go tw.checkPortfolio()
 				} else {
 					tw.logger.With("order_id", tw.orderID).Debug("order is still placed")
+					// TODO: implement 'need to cancel' check
 				}
 				continue
 			}
@@ -86,14 +88,21 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 }
 
 func (tw *TradeWorker) checkPortfolio() {
-	portfolio, err := services.SandboxService.GetSandboxPortfolio(tw.accountID)
+	var portfolio *pb.PortfolioResponse
+	var err error
+
+	if config.TradeBotConfig().IsSandbox {
+		portfolio, err = services.SandboxService.GetSandboxPortfolio(tw.accountID)
+	} else {
+		portfolio, err = services.OperationsService.GetPortfolio(tw.accountID)
+	}
+
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
 		return // just ignoring it
 	}
 
 	tw.logger.Info("positions: ", tradeutil.GetFormattedPositions(portfolio.Positions))
-
 	for _, p := range portfolio.Positions {
 		if p.CurrentPrice != nil {
 			metrics.PortfolioPositionCurrentPrice.WithLabelValues(tw.accountID, tw.Figi).Set(tradeutil.MoneyValueToFloat(*p.CurrentPrice))
@@ -121,7 +130,15 @@ func (tw *TradeWorker) checkPortfolio() {
 }
 
 func (tw *TradeWorker) orderIsFulfilled() bool {
-	state, err := services.SandboxService.GetSandboxOrderState(tw.accountID, tw.orderID)
+	var state *pb.OrderState
+	var err error
+
+	if config.TradeBotConfig().IsSandbox {
+		state, err = services.SandboxService.GetSandboxOrderState(tw.accountID, tw.orderID)
+	} else {
+		state, err = services.OrdersService.GetOrderState(tw.accountID, tw.orderID)
+	}
+
 	if err != nil {
 		tw.logger.With("order_id", tw.orderID).Errorf("can not check order state: %v", err)
 		return false
@@ -185,28 +202,34 @@ func (tw *TradeWorker) tryToSellInstrument() {
 		return // wait for the next turn
 	}
 
-	order, err := services.SandboxService.PostSandboxOrder(
-		&pb.PostOrderRequest{
-			Figi:      tw.Figi,
-			OrderId:   uuid.New().String(),
-			Quantity:  int64(tw.config.LotsToBuy),
-			Price:     orderBook.LastPrice,
-			AccountId: tw.accountID,
-			OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
-			Direction: pb.OrderDirection_ORDER_DIRECTION_SELL,
-		},
-	)
+	orderRequest := &pb.PostOrderRequest{
+		Figi:      tw.Figi,
+		OrderId:   uuid.New().String(),
+		Quantity:  int64(tw.config.LotsToBuy),
+		Price:     orderBook.LastPrice,
+		AccountId: tw.accountID,
+		OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
+		Direction: pb.OrderDirection_ORDER_DIRECTION_SELL,
+	}
+
+	var orderResponse *pb.PostOrderResponse
+	if config.TradeBotConfig().IsSandbox {
+		orderResponse, err = services.SandboxService.PostSandboxOrder(orderRequest)
+	} else {
+		orderResponse, err = services.OrdersService.PostOrder(orderRequest)
+	}
+
 	if err != nil {
 		tw.logger.Errorf("can not post sell order: %v", err)
 		return // nothing bad happened, let's proceed
 	}
 
-	tw.orderID = order.OrderId
-	tw.orderPrice = order.InitialOrderPrice
+	tw.orderID = orderResponse.OrderId
+	tw.orderPrice = orderResponse.InitialOrderPrice
 	tw.logger.With("order_id", tw.orderID).
 		Infof("sell order created, initial price: %d.%d %s, current status: %s",
-			order.InitialOrderPrice.Units, order.InitialOrderPrice.Nano,
-			order.InitialOrderPrice.Currency, order.ExecutionReportStatus.String())
+			orderResponse.InitialOrderPrice.Units, orderResponse.InitialOrderPrice.Nano,
+			orderResponse.InitialOrderPrice.Currency, orderResponse.ExecutionReportStatus.String())
 
 	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
 		pb.OrderDirection_ORDER_DIRECTION_SELL.String()).Inc()
@@ -235,28 +258,33 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 	tw.logger.Infof("last price: %f, close price: %f limit up: %f, limit down: %f",
 		lastPrice, closePrice, limitUp, limitDown)
 
-	order, err := services.SandboxService.PostSandboxOrder(
-		&pb.PostOrderRequest{
-			Figi:      tw.Figi,
-			OrderId:   uuid.New().String(),
-			Quantity:  int64(tw.config.LotsToBuy),
-			Price:     orderBook.LastPrice,
-			AccountId: tw.accountID,
-			OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
-			Direction: pb.OrderDirection_ORDER_DIRECTION_BUY,
-		},
-	)
+	orderRequest := &pb.PostOrderRequest{
+		Figi:      tw.Figi,
+		OrderId:   uuid.New().String(),
+		Quantity:  int64(tw.config.LotsToBuy),
+		Price:     orderBook.LastPrice,
+		AccountId: tw.accountID,
+		OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
+		Direction: pb.OrderDirection_ORDER_DIRECTION_BUY,
+	}
+
+	var orderResponse *pb.PostOrderResponse
+	if config.TradeBotConfig().IsSandbox {
+		orderResponse, err = services.SandboxService.PostSandboxOrder(orderRequest)
+	} else {
+		orderResponse, err = services.OrdersService.PostOrder(orderRequest)
+	}
 	if err != nil {
 		tw.logger.Errorf("can not post buy order: %v", err)
 		return // nothing bad happened, let's proceed
 	}
 
-	tw.orderID = order.OrderId
-	tw.orderPrice = order.InitialOrderPrice
+	tw.orderID = orderResponse.OrderId
+	tw.orderPrice = orderResponse.InitialOrderPrice
 	tw.logger.With("order_id", tw.orderID).
 		Infof("buy order created, initial price: %d.%d %s, current status: %s",
-			order.InitialOrderPrice.Units, order.InitialOrderPrice.Nano,
-			order.InitialOrderPrice.Currency, order.ExecutionReportStatus.String())
+			orderResponse.InitialOrderPrice.Units, orderResponse.InitialOrderPrice.Nano,
+			orderResponse.InitialOrderPrice.Currency, orderResponse.ExecutionReportStatus.String())
 
 	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
 		pb.OrderDirection_ORDER_DIRECTION_BUY.String()).Inc()
@@ -270,7 +298,6 @@ func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
 	}
 
 	tw.logger.Infof("trading status: %s", status.TradingStatus.String())
-
 	for _, s := range pb.SecurityTradingStatus_name {
 		metrics.InstrumentTradingStatus.WithLabelValues(tw.Figi, s).Set(0)
 	}
