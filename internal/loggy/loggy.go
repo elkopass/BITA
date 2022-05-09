@@ -18,9 +18,22 @@ var (
 )
 
 func init() {
+	level := zapcore.InfoLevel
+
+	switch os.Getenv("TRADEBOT_LOG_LEVEL") {
+	case "DEBUG":
+		level = zapcore.DebugLevel
+	case "INFO":
+		level = zapcore.InfoLevel
+	case "WARN":
+		level = zapcore.WarnLevel
+	case "ERROR":
+		level = zapcore.ErrorLevel
+	}
+
 	cfg := zap.Config{
 		Encoding:         "json",
-		Level:            zap.NewAtomicLevelAt(zapcore.DebugLevel),
+		Level:            zap.NewAtomicLevelAt(level),
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
 		InitialFields: map[string]interface{}{
