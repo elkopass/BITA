@@ -19,3 +19,6 @@
 
 # Project folder
 .idea/
+
+# Prometheus config
+prometheus.yml
