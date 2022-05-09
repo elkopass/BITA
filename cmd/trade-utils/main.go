@@ -1,20 +1,41 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"github.com/elkopass/BITA/internal/loggy"
 	pb "github.com/elkopass/BITA/internal/proto"
 	"github.com/elkopass/BITA/internal/sdk"
+	"os"
 )
 
 func main() {
-	log := loggy.GetLogger().Sugar()
+	var mode string
+	flag.StringVar(&mode, "mode", "", "running module")
+	flag.Parse()
 
+	if len(mode) == 0 {
+		fmt.Println("Usage: trade-utils -mode [accounts|figi]")
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+
+	switch mode {
+	case "accounts":
+		printAvailableAccounts()
+	case "figi":
+		printAvailableFigiList()
+	default:
+		fmt.Printf("unknown mode '%s'; possible values: accounts, figi", mode)
+		os.Exit(1)
+	}
+}
+
+func printAvailableFigiList() {
 	services := sdk.NewServicePool()
 	shares, err := services.InstrumentsService.Shares(pb.InstrumentStatus_INSTRUMENT_STATUS_ALL)
 	if err != nil {
-		log.Fatalf("error getting shares: %v", err)
-		return
+		fmt.Printf("error getting shares: %v\n", err)
+		os.Exit(1)
 	}
 
 	for _, share := range shares {
@@ -22,7 +43,21 @@ func main() {
 			message := fmt.Sprintf("[%s] %s: %s", share.Ticker, share.Name, share.Figi)
 			message += fmt.Sprintf(" (currency: %s, lot: %d)", share.Currency, share.Lot)
 
-			log.Info(message)
+			fmt.Println(message)
 		}
+	}
+}
+
+func printAvailableAccounts() {
+	services := sdk.NewServicePool()
+	accounts, err := services.UsersService.GetAccounts()
+	if err != nil {
+		fmt.Printf("error getting accounts: %v", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Available accounts:")
+	for _, acc := range accounts {
+		fmt.Printf("[%s] %s (%s, %s)\n", acc.Id, acc.Name, acc.Status, acc.AccessLevel)
 	}
 }

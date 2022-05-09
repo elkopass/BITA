@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/elkopass/BITA/internal/config"
 	"github.com/elkopass/BITA/internal/loggy"
+	"github.com/elkopass/BITA/internal/sdk"
 	"go.uber.org/zap"
 	"sync"
 )
@@ -22,7 +23,7 @@ func NewTradeBot() *TradeBot {
 }
 
 func (tb TradeBot) Run(ctx context.Context) (err error) {
-	tb.logger.Info("starting!")
+	tb.logger.Infof("starting with %s strategy and sdk v%s", config.TradeBotConfig().Strategy, sdk.Version)
 
 	accountID := config.TradeBotConfig().AccountID
 	if config.TradeBotConfig().IsSandbox {

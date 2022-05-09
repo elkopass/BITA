@@ -20,5 +20,9 @@
 # Project folder
 .idea/
 
+# Ocaisionally built binaries
+trade-bot
+trade-utils
+
 # Prometheus config
 prometheus.yml
