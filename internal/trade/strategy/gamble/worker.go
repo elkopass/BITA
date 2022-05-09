@@ -139,11 +139,18 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 	tw.logger.With("order_id", tw.orderID).
 		Infof("execution status: %s", state.ExecutionReportStatus)
 
-	// TODO: handle cancellations
 	if state.ExecutionReportStatus == pb.OrderExecutionReportStatus_EXECUTION_REPORT_STATUS_NEW {
 		return false
 	}
 	if state.ExecutionReportStatus == pb.OrderExecutionReportStatus_EXECUTION_REPORT_STATUS_PARTIALLYFILL {
+		return false
+	}
+	if state.ExecutionReportStatus == pb.OrderExecutionReportStatus_EXECUTION_REPORT_STATUS_CANCELLED {
+		tw.handleCancellation()
+		return false
+	}
+	if state.ExecutionReportStatus == pb.OrderExecutionReportStatus_EXECUTION_REPORT_STATUS_REJECTED {
+		tw.handleCancellation()
 		return false
 	}
 
@@ -332,4 +339,11 @@ func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 		return true
 	}
 	return false
+}
+
+func (tw *TradeWorker) handleCancellation() {
+	tw.logger.With("order_id", tw.orderID).Warn("order is cancelled")
+
+	tw.orderID = ""
+	tw.orderPrice = nil
 }
