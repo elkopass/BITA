@@ -7,7 +7,9 @@ services:
       context: .
     env_file:
       - cmd/trade-bot/.env
-    restart: "always"
+    restart_policy:
+      condition: on-failure
+      max-attempts: 3
 
   grafana:
     image: grafana/grafana:8.2.6-ubuntu
@@ -31,7 +33,7 @@ services:
       - '--storage.tsdb.path=/prometheus'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
-    network_mode: 'host'
+    network_mode: host
 
 
 volumes:
