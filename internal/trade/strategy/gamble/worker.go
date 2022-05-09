@@ -362,9 +362,15 @@ func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 	tw.logger.Infof("expected price: %f, last: %f, close: %f limit up: %f, limit down: %f, stop loss: %f",
 		expectedProfit, lastPrice, closePrice, limitUp, limitDown, expectedLoss)
 
-	if closePrice < expectedLoss || closePrice > expectedProfit {
+	if closePrice < expectedLoss {
+		metrics.StopLossDecisions.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
 		return true
 	}
+	if closePrice > expectedProfit {
+		metrics.TakeProfitDecisions.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
+		return true
+	}
+
 	return false
 }
 

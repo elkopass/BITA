@@ -31,6 +31,16 @@ var (
 		Name: "tradebot_orders_fulfilled",
 		Help: "Fulfilled orders total counter",
 	}, []string{"bot_id", "figi", "direction"})
+	// StopLossDecisions counts number of stop loss decisions by trade bot.
+	StopLossDecisions = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "tradebot_stop_loss_decisions",
+		Help: "Stop loss decisions counter",
+	}, []string{"bot_id", "figi"})
+	// TakeProfitDecisions counts number of stop loss decisions by trade bot.
+	TakeProfitDecisions = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "tradebot_take_profit_decisions",
+		Help: "Take profit decisions counter",
+	}, []string{"bot_id", "figi"})
 
 	// InstrumentLastPrice stores last price for existing instrument.
 	InstrumentLastPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -73,6 +83,8 @@ func init() {
 	prometheus.MustRegister(InstrumentsPurchased)
 	prometheus.MustRegister(OrdersPlaced)
 	prometheus.MustRegister(OrdersFulfilled)
+	prometheus.MustRegister(StopLossDecisions)
+	prometheus.MustRegister(TakeProfitDecisions)
 
 	/* additional trade statistics */
 	prometheus.MustRegister(InstrumentLastPrice)
