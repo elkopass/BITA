@@ -139,6 +139,7 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 	tw.logger.With("order_id", tw.orderID).
 		Infof("execution status: %s", state.ExecutionReportStatus)
 
+	// TODO: handle cancellations
 	if state.ExecutionReportStatus == pb.OrderExecutionReportStatus_EXECUTION_REPORT_STATUS_NEW {
 		return false
 	}
@@ -203,7 +204,7 @@ func (tw *TradeWorker) tryToSellInstrument() {
 	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
 		pb.OrderDirection_ORDER_DIRECTION_SELL.String()).Inc()
 
-	tw.checkPortfolio()
+	go tw.checkPortfolio()
 }
 
 func (tw *TradeWorker) tryToBuyInstrument() {
@@ -315,13 +316,13 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 }
 
 func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
-	expectedProfit := tradeutil.MoneyValueToFloat(*tw.orderPrice) * tw.config.TakeProfitCoef
-	expectedLoss := tradeutil.MoneyValueToFloat(*tw.orderPrice) * tw.config.StopLossCoef
-
 	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
 	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
 	limitUp := tradeutil.QuotationToFloat(*orderBook.LimitUp)
 	limitDown := tradeutil.QuotationToFloat(*orderBook.LimitDown)
+
+	expectedProfit := closePrice * tw.config.TakeProfitCoef
+	expectedLoss := closePrice * tw.config.StopLossCoef
 
 	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
 	tw.logger.Infof("expected price: %f, last: %f, close: %f limit up: %f, limit down: %f, stop loss: %f",
