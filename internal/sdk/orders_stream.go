@@ -6,7 +6,7 @@ import (
 )
 
 type OrdersStreamInterface interface {
-	// Stream сделок пользователя
+	// Stream сделок пользователя.
 	TradesStream(in *pb.TradesStreamRequest) (pb.OrdersStreamService_TradesStreamClient, error)
 }
 
