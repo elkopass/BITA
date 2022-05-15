@@ -18,7 +18,6 @@ func main() {
 
 	// validate configuration
 	cnf := config.TradeBotConfig()
-
 	if cnf.Token == "<your_api_token>" {
 		log.Fatalf("please set your own API token in TRADEBOT_TOKEN env variable")
 	}
@@ -27,6 +26,10 @@ func main() {
 		log.Infof("running in sandbox mode with %s strategy", cnf.Strategy)
 	} else {
 		log.Warnf("[DANGER] running without sandbox with %s strategy, I hope you know what you doing", cnf.Strategy)
+		if cnf.AccountID == "<your_api_token>" {
+			log.Fatalf("please specify your own account ID in TRADEBOT_ACCOUNT_ID env variable " +
+				"(compile and run 'trade-utils -mode accounts' to get it")
+		}
 	}
 
 	// init trade bot
