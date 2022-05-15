@@ -5,8 +5,11 @@ services:
     build:
       dockerfile: cmd/trade-bot/Dockerfile
       context: .
+    container_name: trade_bot
     env_file:
       - cmd/trade-bot/.env
     restart_policy:
       condition: on-failure
       max-attempts: 3
+    ports:
+      - 8080:8080  # to access the metrics
