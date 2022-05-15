@@ -20,6 +20,7 @@ import (
 //	return formattedCandles
 //}
 
+// GetFormattedPositions returns portfolio positions in a pretty-formatted string to print.
 func GetFormattedPositions(positions []*pb.PortfolioPosition) string {
 	formattedPositions := ""
 	for _, p := range positions {

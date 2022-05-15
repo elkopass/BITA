@@ -31,6 +31,7 @@ type metricsConfig struct {
 }
 
 var (
+	// TradeBotConfig returns relevant global configuration.
 	TradeBotConfig = func() tradeBotConfig {
 		var config tradeBotConfig
 		err := envconfig.Process("tradebot", &config)
@@ -41,6 +42,7 @@ var (
 		return config
 	}
 
+	// TradeBotConfig returns config for Prometheus exporter.
 	MetricsConfig = func() metricsConfig {
 		var config metricsConfig
 		err := envconfig.Process("metrics", &config)

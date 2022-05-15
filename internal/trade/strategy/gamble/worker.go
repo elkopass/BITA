@@ -87,6 +87,7 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 	}
 }
 
+// checkPortfolio calls sdk.OperationsService.GetPortfolio and updates portfolio metrics.
 func (tw *TradeWorker) checkPortfolio() {
 	var portfolio *pb.PortfolioResponse
 	var err error
@@ -129,6 +130,8 @@ func (tw *TradeWorker) checkPortfolio() {
 	}
 }
 
+// orderIsFulfilled calls sdk.OrdersService.GetOrderState and checks ExecutionReportStatus.
+// If order is not fulfilled, it will return false or even call the handleCancellation.
 func (tw *TradeWorker) orderIsFulfilled() bool {
 	var state *pb.OrderState
 	var err error
@@ -189,6 +192,8 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 	return true
 }
 
+// tryToSellInstrument calls sdk.MarketDataService.GetOrderBook and if priceIsOkToSell
+// the order will be placed and orderID will be set along with orderPrice.
 func (tw *TradeWorker) tryToSellInstrument() {
 	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
@@ -237,6 +242,8 @@ func (tw *TradeWorker) tryToSellInstrument() {
 	go tw.checkPortfolio()
 }
 
+// tryToSellInstrument calls sdk.MarketDataService.GetOrderBook and if trendIsOkToBuy
+// the order will be placed and orderID will be set along with orderPrice.
 func (tw *TradeWorker) tryToBuyInstrument() {
 	trendIsOK, _ := tw.trendIsOkToBuy()
 	if !trendIsOK {
@@ -290,6 +297,7 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 		pb.OrderDirection_ORDER_DIRECTION_BUY.String()).Inc()
 }
 
+// tradingStatusIsOkToTrade returns true if trading status is normal.
 func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
 	status, err := services.MarketDataService.GetTradingStatus(tw.Figi)
 	if err != nil {
@@ -349,6 +357,7 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 	return false, nil
 }
 
+// priceIsOkToSell returns true if (price > expected profit) or (price < expected loss).
 func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
 	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
@@ -374,6 +383,7 @@ func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 	return false
 }
 
+// handleCancellation unsets orderID and orderPrice.
 func (tw *TradeWorker) handleCancellation() {
 	tw.logger.With("order_id", tw.orderID).Warn("order is cancelled")
 

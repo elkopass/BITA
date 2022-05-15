@@ -8,6 +8,7 @@ import (
 	"github.com/sdcoffey/techan"
 )
 
+// CandlesToTimeSeries converts historic candles from Invest API to techan.TimeSeries.
 func CandlesToTimeSeries(candles []*pb.HistoricCandle) *techan.TimeSeries {
 	var techanCandles []*techan.Candle
 	for i, c := range candles {

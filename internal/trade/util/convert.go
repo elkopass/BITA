@@ -7,6 +7,7 @@ import (
 	"strconv"
 )
 
+// QuotationToFloat converts pb.Quotation to float64.
 func QuotationToFloat(q pb.Quotation) float64 {
 	if q.Nano < 0 {
 		q.Nano = -q.Nano
@@ -16,6 +17,7 @@ func QuotationToFloat(q pb.Quotation) float64 {
 	return p
 }
 
+// MoneyValueToFloat converts pb.MoneyValueToFloat to float64.
 func MoneyValueToFloat(q pb.MoneyValue) float64 {
 	if q.Nano < 0 {
 		q.Nano = -q.Nano
