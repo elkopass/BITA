@@ -1,3 +1,4 @@
+// Package loggy is just a little zap-logger wrapper.
 package loggy
 
 import (

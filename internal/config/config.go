@@ -1,3 +1,4 @@
+// Package config stores global trade-bot configuration.
 package config
 
 import (

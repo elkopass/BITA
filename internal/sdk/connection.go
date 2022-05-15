@@ -1,3 +1,4 @@
+// Package sdk represents internal proto-wrapper for Tinkoff Invest API.
 package sdk
 
 import (

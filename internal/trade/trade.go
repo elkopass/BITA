@@ -1,3 +1,4 @@
+// Package trade is responsible for all trading logic.
 package trade
 
 import "context"

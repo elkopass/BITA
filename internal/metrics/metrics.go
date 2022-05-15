@@ -1,3 +1,4 @@
+// Package metrics stores all Prometheus metrics used by trade-bot.
 package metrics
 
 import (

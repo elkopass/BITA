@@ -1,3 +1,4 @@
+// Package util stores some small and useful converters and formatters.
 package util
 
 import (
