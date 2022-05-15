@@ -33,8 +33,8 @@ Strategy is pretty straightforward:
 		 in global config. If it's 'true', bot will try to create a sell order based on
 		 current market price. In other way it will just gracefully exit.
 
-Gamble strategy is ready-to-use in a Sandbox environment. TradeBot will automatically
-create an sandbox account and do the same things as in real market (except it's just a
-sandbox and all money here is virtual).
+Gamble (naive) strategy is ready-to-use in a Sandbox environment.
+TradeBot will automatically create a sandbox account and do the same things
+as in a real market (except it's just a sandbox and all money here is virtual).
  */
 package gamble

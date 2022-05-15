@@ -1,4 +1,4 @@
-package gamble
+package tumble
 
 import (
 	"context"
@@ -82,3 +82,4 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 
 	return nil
 }
+

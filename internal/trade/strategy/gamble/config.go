@@ -9,8 +9,6 @@ import (
 var services = sdk.NewServicePool()
 
 type TradeConfig struct {
-	Figi []string `required:"true"`
-
 	LotsToBuy      int     `default:"1" split_words:"true"`
 	StopLossCoef   float64 `default:"0.97" split_words:"true"`
 	TakeProfitCoef float64 `default:"1.02" split_words:"true"`
