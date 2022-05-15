@@ -2,10 +2,13 @@ package gamble
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/elkopass/BITA/internal/config"
 	"github.com/elkopass/BITA/internal/loggy"
 	"github.com/elkopass/BITA/internal/sdk"
 	"go.uber.org/zap"
+	"strings"
 	"sync"
 )
 
@@ -29,9 +32,16 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	if config.TradeBotConfig().IsSandbox {
 		accountID, err = services.SandboxService.OpenSandboxAccount()
 		if err != nil {
-			tb.logger.Errorf("can not create account: %v", err)
+			return errors.New(fmt.Sprintf("can not create account: %v", err))
 		}
 		tb.logger.Infof("created new account with ID %s", accountID)
+	} else {
+		info, err := services.UsersService.GetInfo()
+		if err != nil {
+			return errors.New(fmt.Sprintf("can not get user info: %v", err))
+		}
+		tb.logger.Infof("user tariff: %s, qualified for work with %s",
+			info.Tariff, strings.Join(info.QualifiedForWorkWith, ","))
 	}
 
 	// replace logger
