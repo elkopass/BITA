@@ -48,6 +48,11 @@ var (
 		Name: "tradebot_instrument_last_price",
 		Help: "Instrument last price gauge",
 	}, []string{"figi"})
+	// InstrumentFairPrice stores calculated fair price for an instrument.
+	InstrumentFairPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "tradebot_instrument_fair_price",
+		Help: "Instrument fair price gauge",
+	}, []string{"figi"})
 	// InstrumentTradingStatus stores last instrument trading status.
 	InstrumentTradingStatus = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "tradebot_instrument_trading_status",
@@ -89,6 +94,7 @@ func init() {
 
 	/* additional trade statistics */
 	prometheus.MustRegister(InstrumentLastPrice)
+	prometheus.MustRegister(InstrumentFairPrice)
 	prometheus.MustRegister(InstrumentTradingStatus)
 	prometheus.MustRegister(PortfolioInstrumentsAmount)
 	prometheus.MustRegister(PortfolioExpectedYieldOverall)

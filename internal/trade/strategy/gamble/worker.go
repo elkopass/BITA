@@ -207,11 +207,28 @@ func (tw *TradeWorker) tryToSellInstrument() {
 		return // wait for the next turn
 	}
 
+	fairPrice, err := tradeutil.CalculateFairBuyPrice(*orderBook)
+	if err != nil {
+		tw.logger.Errorf("can not calculate fair price: %v", err)
+		return // try again next time
+	}
+
+	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
+	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
+	limitUp := tradeutil.QuotationToFloat(*orderBook.LimitUp)
+	limitDown := tradeutil.QuotationToFloat(*orderBook.LimitDown)
+	priceFair := tradeutil.QuotationToFloat(*fairPrice)
+
+	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
+	metrics.InstrumentFairPrice.WithLabelValues(tw.Figi).Set(priceFair)
+	tw.logger.Infof("last price: %f, close price: %f, limit up: %f, limit down: %f, fair price: %f",
+		lastPrice, closePrice, limitUp, limitDown, priceFair)
+
 	orderRequest := &pb.PostOrderRequest{
 		Figi:      tw.Figi,
 		OrderId:   uuid.New().String(),
 		Quantity:  int64(tw.config.LotsToBuy),
-		Price:     orderBook.ClosePrice,
+		Price:     fairPrice,
 		AccountId: tw.accountID,
 		OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
 		Direction: pb.OrderDirection_ORDER_DIRECTION_SELL,
@@ -256,20 +273,28 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 		return // just ignoring it
 	}
 
+	fairPrice, err := tradeutil.CalculateFairBuyPrice(*orderBook)
+	if err != nil {
+		tw.logger.Errorf("can not calculate fair price: %v", err)
+		return // try again next time
+	}
+
 	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
 	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
 	limitUp := tradeutil.QuotationToFloat(*orderBook.LimitUp)
 	limitDown := tradeutil.QuotationToFloat(*orderBook.LimitDown)
+	priceFair := tradeutil.QuotationToFloat(*fairPrice)
 
 	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
-	tw.logger.Infof("last price: %f, close price: %f limit up: %f, limit down: %f",
-		lastPrice, closePrice, limitUp, limitDown)
+	metrics.InstrumentFairPrice.WithLabelValues(tw.Figi).Set(priceFair)
+	tw.logger.Infof("last price: %f, close price: %f, limit up: %f, limit down: %f, fair price: %f",
+		lastPrice, closePrice, limitUp, limitDown, priceFair)
 
 	orderRequest := &pb.PostOrderRequest{
 		Figi:      tw.Figi,
 		OrderId:   uuid.New().String(),
 		Quantity:  int64(tw.config.LotsToBuy),
-		Price:     orderBook.ClosePrice,
+		Price:     fairPrice,
 		AccountId: tw.accountID,
 		OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
 		Direction: pb.OrderDirection_ORDER_DIRECTION_BUY,
