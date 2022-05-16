@@ -391,11 +391,11 @@ func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 	tw.logger.Infof("fair price: %f, expected: %f, last: %f, close: %f, stop loss: %f",
 		fair, expectedProfit, lastPrice, closePrice, expectedLoss)
 
-	if closePrice < expectedLoss {
+	if fair < expectedLoss {
 		metrics.StopLossDecisions.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
 		return true
 	}
-	if closePrice > expectedProfit {
+	if fair > expectedProfit {
 		metrics.TakeProfitDecisions.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
 		return true
 	}
