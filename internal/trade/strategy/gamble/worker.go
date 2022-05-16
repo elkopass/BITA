@@ -213,17 +213,6 @@ func (tw *TradeWorker) tryToSellInstrument() {
 		return // try again next time
 	}
 
-	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
-	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
-	limitUp := tradeutil.QuotationToFloat(*orderBook.LimitUp)
-	limitDown := tradeutil.QuotationToFloat(*orderBook.LimitDown)
-	priceFair := tradeutil.QuotationToFloat(*fairPrice)
-
-	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
-	metrics.InstrumentFairPrice.WithLabelValues(tw.Figi).Set(priceFair)
-	tw.logger.Infof("last price: %f, close price: %f, limit up: %f, limit down: %f, fair price: %f",
-		lastPrice, closePrice, limitUp, limitDown, priceFair)
-
 	orderRequest := &pb.PostOrderRequest{
 		Figi:      tw.Figi,
 		OrderId:   uuid.New().String(),
@@ -384,17 +373,23 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 
 // priceIsOkToSell returns true if (price > expected profit) or (price < expected loss).
 func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
+	fairPrice, err := tradeutil.CalculateFairSellPrice(orderBook)
+	if err != nil {
+		tw.logger.Warnf("can't calculate fair price: %v", err.Error())
+		return false
+	}
+
 	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
 	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
-	limitUp := tradeutil.QuotationToFloat(*orderBook.LimitUp)
-	limitDown := tradeutil.QuotationToFloat(*orderBook.LimitDown)
+	fair := tradeutil.QuotationToFloat(*fairPrice)
 
-	expectedProfit := closePrice * tw.config.TakeProfitCoef
-	expectedLoss := closePrice * tw.config.StopLossCoef
+	expectedProfit := fair * tw.config.TakeProfitCoef
+	expectedLoss := fair * tw.config.StopLossCoef
 
 	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
-	tw.logger.Infof("expected price: %f, last: %f, close: %f limit up: %f, limit down: %f, stop loss: %f",
-		expectedProfit, lastPrice, closePrice, limitUp, limitDown, expectedLoss)
+	metrics.InstrumentFairPrice.WithLabelValues(tw.Figi).Set(fair)
+	tw.logger.Infof("fair price: %f, expected: %f, last: %f, close: %f, stop loss: %f",
+		fair, expectedProfit, lastPrice, closePrice, expectedLoss)
 
 	if closePrice < expectedLoss {
 		metrics.StopLossDecisions.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
