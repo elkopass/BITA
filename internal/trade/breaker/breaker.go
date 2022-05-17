@@ -7,37 +7,42 @@ import (
 )
 
 type CircuitBreaker struct {
-	failuresTotal   int
+	failuresTotal   *int
 	lastFailureTime *time.Time
 }
 
 func NewCircuitBreaker() *CircuitBreaker {
-	return &CircuitBreaker{}
+	zero := 0
+	now := time.Now()
+
+	return &CircuitBreaker{
+		failuresTotal:   &zero,
+		lastFailureTime: &now,
+	}
 }
 
-func (cb *CircuitBreaker) AddFailure() {
-	cb.failuresTotal++
+func (cb *CircuitBreaker) IncFailures() {
+	*cb.failuresTotal++
 	cb.updateState()
 }
 
 // WorkerMustExit returns true if trade worker is unhealthy and must be killed.
 func (cb CircuitBreaker) WorkerMustExit() bool {
-	return cb.failuresTotal > config.CircuitBreakerMaxFailures
+	return *cb.failuresTotal > config.CircuitBreakerMaxFailures
 }
 
 // updateState will "forgot" old failures if they exist.
 func (cb *CircuitBreaker) updateState() {
-	prev := time.Now().Add(-config.CircuitBreakerRefreshTime)
+	now := time.Now()
+	prev := cb.lastFailureTime.Add(config.CircuitBreakerRefreshTime)
 
-	for ; cb.lastFailureTime.Before(prev); {
-		if cb.failuresTotal == 0 {
+	for ; prev.Before(now); prev = prev.Add(config.CircuitBreakerRefreshTime) {
+		if *cb.failuresTotal <= 0 {
 			break
 		}
 
-		cb.lastFailureTime.Add(config.CircuitBreakerRefreshTime)
-		cb.failuresTotal--
+		*cb.failuresTotal--
 	}
 
-	now := time.Now()
 	cb.lastFailureTime = &now
 }

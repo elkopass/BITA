@@ -62,7 +62,7 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 			if tw.breaker.WorkerMustExit() {
 				tw.logger.Error("worker stopped by circuit breaker")
 				metrics.StoppedByCircuitBreaker.WithLabelValues(loggy.GetBotID(), tw.Figi)
-				break
+				return
 			}
 
 			if !tw.tradingStatusIsOkToTrade() {
@@ -109,7 +109,7 @@ func (tw *TradeWorker) checkPortfolio() {
 
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
-		tw.breaker.AddFailure()
+		tw.breaker.IncFailures()
 		return // just ignoring it
 	}
 
@@ -154,7 +154,7 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 
 	if err != nil {
 		tw.logger.With("order_id", tw.orderID).Errorf("can not check order state: %v", err)
-		tw.breaker.AddFailure()
+		tw.breaker.IncFailures()
 		return false
 	}
 
@@ -209,7 +209,7 @@ func (tw *TradeWorker) tryToSellInstrument() {
 	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
-		tw.breaker.AddFailure()
+		tw.breaker.IncFailures()
 		return // just ignoring it
 	}
 
@@ -244,7 +244,7 @@ func (tw *TradeWorker) tryToSellInstrument() {
 
 	if err != nil {
 		tw.logger.Errorf("can not post sell order: %v", err)
-		tw.breaker.AddFailure()
+		tw.breaker.IncFailures()
 		return // nothing bad happened, let's proceed
 	}
 
@@ -272,7 +272,7 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
-		tw.breaker.AddFailure()
+		tw.breaker.IncFailures()
 		return // just ignoring it
 	}
 
@@ -330,7 +330,7 @@ func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
 	status, err := services.MarketDataService.GetTradingStatus(tw.Figi)
 	if err != nil {
 		tw.logger.Errorf("error getting trading status: %v", err)
-		tw.breaker.AddFailure()
+		tw.breaker.IncFailures()
 		return false
 	}
 
@@ -351,7 +351,7 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 		pb.CandleInterval_CANDLE_INTERVAL_1_MIN,
 	)
 	if err != nil {
-		tw.breaker.AddFailure()
+		tw.breaker.IncFailures()
 		return false, errors.New("error getting short candles: " + err.Error())
 	}
 
@@ -362,7 +362,7 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 		pb.CandleInterval_CANDLE_INTERVAL_5_MIN,
 	)
 	if err != nil {
-		tw.breaker.AddFailure()
+		tw.breaker.IncFailures()
 		return false, errors.New("error getting long candles: " + err.Error())
 	}
 
