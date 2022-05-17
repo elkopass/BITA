@@ -24,5 +24,6 @@
 trade-bot
 trade-utils
 
-# Prometheus config
+# Development configs
 prometheus.yml
+grafana.ini
