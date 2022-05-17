@@ -7,7 +7,7 @@ RUN mkdir /build
 WORKDIR /build
 
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o trade-bot ./cmd/trade-bot
+RUN CGO_ENABLED=0 GOOS=linux go build -v -o trade-bot ./cmd/trade-bot
 
 # Stage 2: run binary
 FROM alpine:3.11

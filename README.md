@@ -45,7 +45,7 @@ $ export $(grep -v '^#' cmd/trade-bot/.env | xargs)
 
 After that, you can build binary and run it using go v1.16+ as follows:
 ```shell script
-$ go build -a -o trade-bot ./cmd/trade-bot
+$ go build -v -o trade-bot ./cmd/trade-bot
 $ ./trade-bot
 ``` 
 
