@@ -12,6 +12,9 @@ const (
 	AppName = "elkopass.BITA"
 
 	DefaultRequestTimeout = 30 * time.Second
+
+	CircuitBreakerMaxFailures = 5
+	CircuitBreakerRefreshTime = 5 * time.Minute
 )
 
 type tradeBotConfig struct {

@@ -7,6 +7,7 @@ import (
 	"github.com/elkopass/BITA/internal/loggy"
 	"github.com/elkopass/BITA/internal/metrics"
 	pb "github.com/elkopass/BITA/internal/proto"
+	cb "github.com/elkopass/BITA/internal/trade/breaker"
 	tradeutil "github.com/elkopass/BITA/internal/trade/util"
 	"github.com/google/uuid"
 	"github.com/sdcoffey/techan"
@@ -26,8 +27,9 @@ type TradeWorker struct {
 	sellFlag   bool           // if true, worker is trying to sell assets
 	orderPrice *pb.MoneyValue // if order is set
 
-	logger *zap.SugaredLogger
-	config TradeConfig
+	logger  *zap.SugaredLogger
+	breaker cb.CircuitBreaker
+	config  TradeConfig
 }
 
 func NewTradeWorker(figi, accountID string) *TradeWorker {
@@ -38,6 +40,7 @@ func NewTradeWorker(figi, accountID string) *TradeWorker {
 		Figi:      figi,
 		accountID: accountID,
 		config:    *NewTradeConfig(),
+		breaker:   *cb.NewCircuitBreaker(),
 		sellFlag:  false,
 		logger: loggy.GetLogger().Sugar().
 			With("bot_id", loggy.GetBotID()).
@@ -56,6 +59,12 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 	for {
 		select {
 		case <-time.After(time.Duration(tw.config.WorkerSleepDurationSeconds) * time.Second):
+			if tw.breaker.WorkerMustExit() {
+				tw.logger.Error("worker stopped by circuit breaker")
+				metrics.StoppedByCircuitBreaker.WithLabelValues(loggy.GetBotID(), tw.Figi)
+				break
+			}
+
 			if !tw.tradingStatusIsOkToTrade() {
 				continue // just skip
 			}
@@ -100,6 +109,7 @@ func (tw *TradeWorker) checkPortfolio() {
 
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
+		tw.breaker.AddFailure()
 		return // just ignoring it
 	}
 
@@ -144,6 +154,7 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 
 	if err != nil {
 		tw.logger.With("order_id", tw.orderID).Errorf("can not check order state: %v", err)
+		tw.breaker.AddFailure()
 		return false
 	}
 
@@ -198,6 +209,7 @@ func (tw *TradeWorker) tryToSellInstrument() {
 	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
+		tw.breaker.AddFailure()
 		return // just ignoring it
 	}
 
@@ -232,6 +244,7 @@ func (tw *TradeWorker) tryToSellInstrument() {
 
 	if err != nil {
 		tw.logger.Errorf("can not post sell order: %v", err)
+		tw.breaker.AddFailure()
 		return // nothing bad happened, let's proceed
 	}
 
@@ -259,6 +272,7 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
+		tw.breaker.AddFailure()
 		return // just ignoring it
 	}
 
@@ -316,6 +330,7 @@ func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
 	status, err := services.MarketDataService.GetTradingStatus(tw.Figi)
 	if err != nil {
 		tw.logger.Errorf("error getting trading status: %v", err)
+		tw.breaker.AddFailure()
 		return false
 	}
 
@@ -336,6 +351,7 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 		pb.CandleInterval_CANDLE_INTERVAL_1_MIN,
 	)
 	if err != nil {
+		tw.breaker.AddFailure()
 		return false, errors.New("error getting short candles: " + err.Error())
 	}
 
@@ -346,6 +362,7 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 		pb.CandleInterval_CANDLE_INTERVAL_5_MIN,
 	)
 	if err != nil {
+		tw.breaker.AddFailure()
 		return false, errors.New("error getting long candles: " + err.Error())
 	}
 

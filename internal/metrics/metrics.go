@@ -42,6 +42,11 @@ var (
 		Name: "tradebot_take_profit_decisions",
 		Help: "Take profit decisions counter",
 	}, []string{"bot_id", "figi"})
+	// StoppedByCircuitBreaker counts unhealthy workers removed by circuit breaker.
+	StoppedByCircuitBreaker = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "tradebot_stopped_by_circuit_breaker",
+		Help: "Trade workers stopped by circuit breaker counter",
+	}, []string{"bot_id", "figi"})
 
 	// InstrumentLastPrice stores last price for existing instrument.
 	InstrumentLastPrice = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -91,6 +96,7 @@ func init() {
 	prometheus.MustRegister(OrdersFulfilled)
 	prometheus.MustRegister(StopLossDecisions)
 	prometheus.MustRegister(TakeProfitDecisions)
+	prometheus.MustRegister(StoppedByCircuitBreaker)
 
 	/* additional trade statistics */
 	prometheus.MustRegister(InstrumentLastPrice)
