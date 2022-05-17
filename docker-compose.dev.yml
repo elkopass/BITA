@@ -8,9 +8,6 @@ services:
     container_name: trade_bot
     env_file:
       - cmd/trade-bot/.env
-    restart_policy:
-      condition: on-failure
-      max-attempts: 3
     networks:
       - bot_internal
 
