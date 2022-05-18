@@ -6,6 +6,7 @@ import (
 	pb "github.com/elkopass/BITA/internal/proto"
 )
 
+// GetFormattedCandles returns historic candles in a pretty-formatted string to print.
 //func GetFormattedCandles(candles []*pb.HistoricCandle) string {
 //	formattedCandles := ""
 //	for _, c := range candles {

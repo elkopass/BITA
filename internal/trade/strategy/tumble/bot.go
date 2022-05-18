@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"github.com/elkopass/BITA/internal/config"
 	"github.com/elkopass/BITA/internal/loggy"
+	pb "github.com/elkopass/BITA/internal/proto"
 	"github.com/elkopass/BITA/internal/sdk"
 	"go.uber.org/zap"
 	"strings"
-	"sync"
+	"time"
 )
 
 type TradeBot struct {
@@ -47,39 +48,53 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	tb.logger = tb.logger.With("account_id", accountID)
 
 	figi := config.TradeBotConfig().Figi
-	wg := &sync.WaitGroup{}
-	wg.Add(len(figi))
 
+	mdss := sdk.NewMarketDataStreamService()
+	stream, err := mdss.MarketDataStream()
+	if err != nil {
+		panic(err)
+	}
+
+	var instruments []*pb.OrderBookInstrument
 	for _, f := range figi {
-		workerCtx, cancel := context.WithCancel(context.Background())
-
-		w := NewTradeWorker(f, accountID)
-		tb.cancelFuncs = append(tb.cancelFuncs, cancel)
-
-		go func() {
-			err = w.Run(workerCtx, wg)
-			if err != nil {
-				tb.logger.Errorf("worker finished with error: %v", err)
-			}
-		}()
+		instruments = append(instruments, &pb.OrderBookInstrument{Figi: f, Depth: 10})
 	}
 
-	<-ctx.Done()
+	request := pb.SubscribeOrderBookRequest{
+		Instruments: instruments,
+		SubscriptionAction: pb.SubscriptionAction_SUBSCRIPTION_ACTION_SUBSCRIBE,
+	}
+	payload := &pb.MarketDataRequest_SubscribeOrderBookRequest{SubscribeOrderBookRequest: &request}
 
-	for _, cancel := range tb.cancelFuncs {
-		cancel()
+	err = stream.Send(&pb.MarketDataRequest{Payload: payload})
+	if err != nil {
+		return err
 	}
 
-	wg.Wait()
-
-	if config.TradeBotConfig().IsSandbox {
-		err = services.SandboxService.CloseSandboxAccount(accountID)
+	for {
+		res, err := stream.Recv()
 		if err != nil {
-			tb.logger.Errorf("can't create account: %v", err)
+			tb.logger.Error(err)
 		}
-		tb.logger.Infof("account with ID %s closed successfully", accountID)
+
+		orderBook := res.GetOrderbook()
+		tb.logger.Info(orderBook)
+
+		select {
+		case <-time.After(1 * time.Millisecond):
+			// pass
+		case <-ctx.Done():
+			// TODO: implement sell logic on interrupt
+			if config.TradeBotConfig().IsSandbox {
+				err = services.SandboxService.CloseSandboxAccount(accountID)
+				if err != nil {
+					tb.logger.Errorf("can't create account: %v", err)
+				}
+				tb.logger.Infof("account with ID %s closed successfully", accountID)
+			}
+
+			tb.logger.Info("bot stopped!")
+			return nil
+		}
 	}
-
-	return nil
 }
-
