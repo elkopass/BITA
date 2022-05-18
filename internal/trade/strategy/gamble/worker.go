@@ -248,9 +248,15 @@ func (tw *TradeWorker) tryToSellInstrument() {
 	}
 
 	tw.orderID = orderResponse.OrderId
-	tw.orderPrice = orderResponse.InitialOrderPrice
+	tw.orderPrice = &pb.MoneyValue{
+		Units:    fairPrice.Units,
+		Nano:     fairPrice.Nano,
+		Currency: orderResponse.InitialOrderPrice.Currency,
+	}
+
 	tw.logger.With("order_id", tw.orderID).
-		Infof("sell order created, initial price: %d.%d %s, current status: %s",
+		Infof("sell order created, fair price: %d.%d, initial price: %d.%d %s, current status: %s",
+			fairPrice.Units, fairPrice.Nano,
 			orderResponse.InitialOrderPrice.Units, orderResponse.InitialOrderPrice.Nano,
 			orderResponse.InitialOrderPrice.Currency, orderResponse.ExecutionReportStatus.String())
 
@@ -312,9 +318,15 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 	}
 
 	tw.orderID = orderResponse.OrderId
-	tw.orderPrice = orderResponse.InitialOrderPrice
+	tw.orderPrice = &pb.MoneyValue{
+		Units:    fairPrice.Units,
+		Nano:     fairPrice.Nano,
+		Currency: orderResponse.InitialOrderPrice.Currency,
+	}
+
 	tw.logger.With("order_id", tw.orderID).
-		Infof("buy order created, initial price: %d.%d %s, current status: %s",
+		Infof("buy order created, fair price: %d.%d, initial price: %d.%d %s, current status: %s",
+			fairPrice.Units, fairPrice.Nano,
 			orderResponse.InitialOrderPrice.Units, orderResponse.InitialOrderPrice.Nano,
 			orderResponse.InitialOrderPrice.Currency, orderResponse.ExecutionReportStatus.String())
 
