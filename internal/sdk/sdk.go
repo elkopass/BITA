@@ -1,7 +1,7 @@
 // Package sdk represents internal proto-wrapper for Tinkoff Invest API.
 package sdk
 
-const Version = "0.1.5"
+const Version = "0.1.6"
 
 type ServicePool struct {
 	InstrumentsService InstrumentsService

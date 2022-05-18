@@ -19,3 +19,14 @@ func createRequestContext() (context.Context, context.CancelFunc) {
 
 	return ctx, cancel
 }
+
+func createStreamContext() context.Context {
+	ctx := context.TODO()
+
+	authHeader := fmt.Sprintf("Bearer %s", config.TradeBotConfig().Token)
+	ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", authHeader)
+	ctx = grpcMetadata.AppendToOutgoingContext(ctx, "x-tracking-id", uuid.New().String())
+	ctx = grpcMetadata.AppendToOutgoingContext(ctx, "x-app-name", config.AppName)
+
+	return ctx
+}

@@ -26,8 +26,7 @@ func NewMarketDataStreamService() *MarketDataStreamService {
 }
 
 func (mdss MarketDataStreamService) MarketDataStream() (pb.MarketDataStreamService_MarketDataStreamClient, error) {
-	ctx, cancel := createRequestContext()
-	defer cancel()
+	ctx := createStreamContext()
 
 	res, err := mdss.client.MarketDataStream(ctx)
 	if err != nil {

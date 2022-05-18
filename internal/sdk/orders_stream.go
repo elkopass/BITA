@@ -26,8 +26,7 @@ func NewOrdersStreamService() *OrdersStreamService {
 }
 
 func (oss OrdersStreamService) TradesStream(in *pb.TradesStreamRequest) (pb.OrdersStreamService_TradesStreamClient, error) {
-	ctx, cancel := createRequestContext()
-	defer cancel()
+	ctx := createStreamContext()
 
 	res, err := oss.client.TradesStream(ctx, in)
 	if err != nil {
