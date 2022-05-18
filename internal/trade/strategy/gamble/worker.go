@@ -430,9 +430,8 @@ func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 	return false
 }
 
-// handleCancellation unsets orderID and orderPrice.
+// handleCancellation unsets orderID.
 func (tw *TradeWorker) handleCancellation() {
 	tw.logger.With("order_id", tw.orderID).Warn("order is cancelled")
-
 	tw.orderID = ""
 }

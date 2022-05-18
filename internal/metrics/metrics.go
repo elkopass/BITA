@@ -6,6 +6,12 @@ import (
 )
 
 var (
+	// BotInfo stores strategy, sdk version and amount of workers for each running bot.
+	BotInfo = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "tradebot_info",
+		Help: "Brief information about running bot",
+	}, []string{"bot_id", "sdk_version", "selected_strategy", "workers"})
+
 	// ApiRequests counts total requests to Tinkoff Invest API.
 	ApiRequests = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "tradebot_api_requests",
@@ -86,6 +92,8 @@ var (
 )
 
 func init() {
+	prometheus.MustRegister(BotInfo)
+
 	/* sdk related metrics */
 	prometheus.MustRegister(ApiRequests)
 	prometheus.MustRegister(ApiCallErrors)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/elkopass/BITA/internal/config"
 	"github.com/elkopass/BITA/internal/loggy"
+	"github.com/elkopass/BITA/internal/metrics"
+	"github.com/elkopass/BITA/internal/sdk"
 	"github.com/elkopass/BITA/internal/trade"
 	"github.com/elkopass/BITA/internal/trade/strategy"
 	"github.com/elkopass/BITA/internal/trade/strategy/gamble"
@@ -12,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 )
 
 func main() {
@@ -30,7 +33,7 @@ func main() {
 			log.Fatalf("please specify your own account ID in TRADEBOT_ACCOUNT_ID env variable " +
 				"(compile and run 'trade-utils -mode accounts' to get it)")
 		}
-		log.Warnf("[DANGER] running without sandbox with %s strategy and %s account ID, " +
+		log.Warnf("[DANGER] running without sandbox with %s strategy and %s account ID, "+
 			"I hope you know what you doing", cnf.Strategy, cnf.AccountID)
 	}
 
@@ -52,23 +55,30 @@ func main() {
 		return
 	}
 
-	// setting up server for metrics
-	metrics := config.MetricsConfig()
-	if metrics.Enabled {
+	// setting up server for metricsConfig
+	metricsConfig := config.MetricsConfig()
+	if metricsConfig.Enabled {
 		server := http.NewServeMux()
-		server.Handle(metrics.Endpoint, promhttp.Handler())
+		server.Handle(metricsConfig.Endpoint, promhttp.Handler())
 
 		srv := &http.Server{
-			Addr:    metrics.Addr,
+			Addr:    metricsConfig.Addr,
 			Handler: server,
 		}
 
 		go func() {
-			log.Infof("listening on %s", metrics.Addr)
+			log.Infof("listening on %s", metricsConfig.Addr)
 			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("listen failed: %+s\n", err)
 			}
 		}()
+
+		metrics.BotInfo.WithLabelValues(
+			loggy.GetBotID(),
+			sdk.Version,
+			cnf.Strategy,
+			strconv.Itoa(len(cnf.Figi)),
+		).Inc()
 	}
 
 	// preparing for graceful shutdown
