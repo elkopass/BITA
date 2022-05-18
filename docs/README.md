@@ -1,4 +1,4 @@
-# BITA TRIOCLAP
+# BITA 
 
 [![CI-CD](https://github.com/elkopass/BITA/actions/workflows/main.yml/badge.svg)](https://github.com/elkopass/BITA/actions/workflows/main.yml)
 
