@@ -72,7 +72,6 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 			if tw.orderID != "" {
 				if tw.orderIsFulfilled() {
 					tw.orderID = ""
-					tw.orderPrice = nil
 					tw.sellFlag = !tw.sellFlag
 					go tw.checkPortfolio()
 				} else {
@@ -284,14 +283,12 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 
 	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
 	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
-	limitUp := tradeutil.QuotationToFloat(*orderBook.LimitUp)
-	limitDown := tradeutil.QuotationToFloat(*orderBook.LimitDown)
-	priceFair := tradeutil.QuotationToFloat(*fairPrice)
+	fairMarketPrice := tradeutil.QuotationToFloat(*fairPrice)
 
 	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
-	metrics.InstrumentFairPrice.WithLabelValues(tw.Figi).Set(priceFair)
-	tw.logger.Infof("last price: %f, close price: %f, limit up: %f, limit down: %f, fair price: %f",
-		lastPrice, closePrice, limitUp, limitDown, priceFair)
+	metrics.InstrumentFairPrice.WithLabelValues(tw.Figi).Set(fairMarketPrice)
+	tw.logger.Infof("last price: %f, close price: %f, fair price: %f",
+		lastPrice, closePrice, fairMarketPrice)
 
 	orderRequest := &pb.PostOrderRequest{
 		Figi:      tw.Figi,
@@ -392,27 +389,28 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 	fairPrice, err := tradeutil.CalculateFairSellPrice(orderBook)
 	if err != nil {
-		tw.logger.Warnf("can't calculate fair price: %v", err.Error())
+		tw.logger.Warnf("can't calculate fairMarketPrice price: %v", err.Error())
 		return false
 	}
 
+	lastOrderPrice := tradeutil.MoneyValueToFloat(*tw.orderPrice)
 	closePrice := tradeutil.QuotationToFloat(*orderBook.ClosePrice)
 	lastPrice := tradeutil.QuotationToFloat(*orderBook.LastPrice)
-	fair := tradeutil.QuotationToFloat(*fairPrice)
+	fairMarketPrice := tradeutil.QuotationToFloat(*fairPrice)
 
-	expectedProfit := fair * tw.config.TakeProfitCoef
-	expectedLoss := fair * tw.config.StopLossCoef
+	expectedProfit := lastOrderPrice * tw.config.TakeProfitCoef
+	expectedLoss := lastOrderPrice * tw.config.StopLossCoef
 
 	metrics.InstrumentLastPrice.WithLabelValues(tw.Figi).Set(lastPrice)
-	metrics.InstrumentFairPrice.WithLabelValues(tw.Figi).Set(fair)
-	tw.logger.Infof("fair price: %f, expected: %f, last: %f, close: %f, stop loss: %f",
-		fair, expectedProfit, lastPrice, closePrice, expectedLoss)
+	metrics.InstrumentFairPrice.WithLabelValues(tw.Figi).Set(fairMarketPrice)
+	tw.logger.Infof("order price: %f, fair price: %f, expected: %f, last: %f, close: %f, stop loss: %f",
+		lastOrderPrice, fairMarketPrice, expectedProfit, lastPrice, closePrice, expectedLoss)
 
-	if fair < expectedLoss {
+	if fairMarketPrice < expectedLoss {
 		metrics.StopLossDecisions.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
 		return true
 	}
-	if fair > expectedProfit {
+	if fairMarketPrice > expectedProfit {
 		metrics.TakeProfitDecisions.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
 		return true
 	}
@@ -425,5 +423,4 @@ func (tw *TradeWorker) handleCancellation() {
 	tw.logger.With("order_id", tw.orderID).Warn("order is cancelled")
 
 	tw.orderID = ""
-	tw.orderPrice = nil
 }
