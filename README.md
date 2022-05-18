@@ -49,6 +49,21 @@ $ go build -v -o trade-bot ./cmd/trade-bot
 $ ./trade-bot
 ``` 
 
+## Visualization
+
+It is very important to create alert rules on key trade actions to 
+prevent possible money losses
+
+This is why our service exports a lot of useful 
+[metrics](https://github.com/elkopass/BITA/blob/master/internal/metrics/metrics.go) 
+for you to configure your own monitoring.
+
+**Check out our cool Grafana dashboard [>> here <<](https://bita.somnoynadno.ru)**
+
+You can always download and import the latest version from 
+[JSON file](https://github.com/elkopass/BITA/tree/master/.grafana/TradeBot.json) 
+for your own installation. 
+
 ## Disclaimer
 
 The developers are NOT RESPONSIBLE for any financial losses incurred 
