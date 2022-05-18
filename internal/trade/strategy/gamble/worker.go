@@ -61,7 +61,7 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 		case <-time.After(time.Duration(tw.config.WorkerSleepDurationSeconds) * time.Second):
 			if tw.breaker.WorkerMustExit() {
 				tw.logger.Error("worker stopped by circuit breaker")
-				metrics.StoppedByCircuitBreaker.WithLabelValues(loggy.GetBotID(), tw.Figi)
+				metrics.StoppedByCircuitBreaker.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
 				return
 			}
 
