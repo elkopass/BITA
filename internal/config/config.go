@@ -14,7 +14,7 @@ const (
 	DefaultRequestTimeout = 30 * time.Second
 
 	CircuitBreakerMaxFailures = 5
-	CircuitBreakerRefreshTime = 5 * time.Minute
+	CircuitBreakerRefreshTime = 30 * time.Minute
 )
 
 type tradeBotConfig struct {
