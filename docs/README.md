@@ -6,13 +6,13 @@ Trading **B**ot based on [**I**nvest **T**inkoff **A**PI](https://github.com/Tin
 
 ![TradeBot logo](logo.png)
 
-## Installation
+### Installation
 
 Clone this repository first, and we are ready to go.
 
-```shell script
+
 $ git clone https://github.com/elkopass/BITA
-```
+
 
 This bot is fully configurable with environment variables 
 using [envconfig](https://github.com/kelseyhightower/envconfig) library.
@@ -27,27 +27,27 @@ Right before we started, obtain your Tinkoff Invest API token in
 
 Running trade-bot in a Docker-container is a preferable way.
 
-```shell script
+
 $ cp cmd/trade-bot/.env-example cmd/trade-bot/.env
 $ vim cmd/trade-bot/.env # make sure to reconfigure it with your own data!
 $ docker-compose up --build
-```
+
 
 ### Manual
 
 Let's set and export env variables first:
 
-```shell script
+
 $ cp cmd/trade-bot/.env-example cmd/trade-bot/.env
 $ vim cmd/trade-bot/.env # make sure to reconfigure it with your own data!
 $ export $(grep -v '^#' cmd/trade-bot/.env | xargs)
-```
+
 
 After that, you can build binary and run it using go v1.16+ as follows:
-```shell script
+
 $ go build -v -o trade-bot ./cmd/trade-bot
 $ ./trade-bot
-``` 
+
 
 ## Visualization
 
