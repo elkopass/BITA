@@ -24,7 +24,7 @@ type tradeBotConfig struct {
 	Token      string `required:"true"`
 	AccountID  string `split_words:"true"` // required in non-sandbox mode
 	Env        string `default:"UNSPECIFIED"`
-	LogLevel   string `default:"DEBUG" split_words:"true"`
+	LogLevel   string `default:"INFO" split_words:"true"`
 	Strategy   string `default:"gamble"`
 	SellOnExit bool   `default:"false" split_words:"true"`
 }

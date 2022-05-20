@@ -177,10 +177,10 @@ func (tw *TradeWorker) checkPortfolio() {
 	tw.logger.Info("positions: ", tradeutil.GetFormattedPositions(portfolio.Positions))
 	for _, p := range portfolio.Positions {
 		if p.CurrentPrice != nil {
-			metrics.PortfolioPositionCurrentPrice.WithLabelValues(tw.accountID, tw.Figi).Set(tradeutil.MoneyValueToFloat(*p.CurrentPrice))
+			metrics.PortfolioPositionCurrentPrice.WithLabelValues(tw.accountID, p.Figi).Set(tradeutil.MoneyValueToFloat(*p.CurrentPrice))
 		}
 		if p.ExpectedYield != nil {
-			metrics.PortfolioPositionExpectedYield.WithLabelValues(tw.accountID, tw.Figi).Set(tradeutil.QuotationToFloat(*p.ExpectedYield))
+			metrics.PortfolioPositionExpectedYield.WithLabelValues(tw.accountID, p.Figi).Set(tradeutil.QuotationToFloat(*p.ExpectedYield))
 		}
 	}
 
