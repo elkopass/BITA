@@ -55,13 +55,13 @@ It is very important to create alert rules on key trade actions to
 prevent possible money losses
 
 This is why our service exports a lot of useful 
-[metrics](https://github.com/elkopass/BITA/blob/master/internal/metrics/metrics.go) 
+[metrics](https://github.com/elkopass/BITA/blob/main/internal/metrics/metrics.go) 
 for you to configure your own monitoring.
 
 **Check out our cool Grafana dashboard [>> here <<](https://bita.somnoynadno.ru)**
 
 You can always download and import the latest version from 
-[JSON file](https://github.com/elkopass/BITA/tree/master/.grafana/TradeBot.json) 
+[JSON file](https://github.com/elkopass/BITA/tree/main/.grafana/TradeBot.json) 
 for your own installation. 
 
 ## Disclaimer
