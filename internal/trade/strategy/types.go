@@ -2,6 +2,7 @@
 package strategy
 
 const (
-	GAMBLE = "gamble"
-	TUMBLE = "tumble"
+	GAMBLE   = "gamble"
+	TUMBLE   = "tumble"
+	SCRUMBLE = "scrumble"
 )
