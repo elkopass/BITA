@@ -558,10 +558,18 @@ func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 // checkNeedForCancel tries to cancel orders older than TradeConfig.SecondsToCancelOrder.
 func (tw *TradeWorker) checkNeedForCancel() {
 	if *tw.orderPlacedTime-time.Now().Unix() > tw.config.SecondsToCancelOrder {
-		_, err := services.OrdersService.CancelOrder(tw.accountID, tw.orderID)
-		if err != nil {
-			tw.logger.Warnf("can not cancel order: %v", err)
-			return
+		if config.TradeBotConfig().IsSandbox {
+			_, err := services.SandboxService.CancelSandboxOrder(tw.accountID, tw.orderID)
+			if err != nil {
+				tw.logger.Warnf("can not cancel order: %v", err)
+				return
+			}
+		} else {
+			_, err := services.OrdersService.CancelOrder(tw.accountID, tw.orderID)
+			if err != nil {
+				tw.logger.Warnf("can not cancel order: %v", err)
+				return
+			}
 		}
 
 		tw.handleCancellation()

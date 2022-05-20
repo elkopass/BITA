@@ -25,21 +25,28 @@ func main() {
 	cnf := config.TradeBotConfig()
 	if cnf.Token == "<your_api_token>" {
 		log.Fatalf("please set your own API token in TRADEBOT_TOKEN env variable")
-	} else {
-		service := sdk.NewSandboxService()
-		_, err := service.GetSandboxAccounts()
-		if err != nil {
-			log.Fatalf("your API Token does not exist")
-		}
 	}
 
 	if cnf.IsSandbox {
 		log.Infof("running in sandbox mode with %s strategy", cnf.Strategy)
+
+		service := sdk.NewSandboxService()
+		_, err := service.GetSandboxAccounts()
+		if err != nil {
+			log.Fatalf("your API token does not exist")
+		}
 	} else {
 		if cnf.AccountID == "<your_api_token>" {
 			log.Fatalf("please specify your own account ID in TRADEBOT_ACCOUNT_ID env variable " +
 				"(compile and run '$ trade-utils -mode accounts' to get it)")
 		}
+
+		service := sdk.NewUsersService()
+		_, err := service.GetInfo()
+		if err != nil {
+			log.Fatalf("your API token does not exist")
+		}
+
 		log.Warnf("[DANGER] running without sandbox with %s strategy and %s account ID, "+
 			"I hope you know what you doing", cnf.Strategy, cnf.AccountID)
 	}

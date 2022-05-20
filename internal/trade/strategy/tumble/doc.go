@@ -10,8 +10,7 @@ then the robot buys the instrument at the market price, otherwise it sells,
 immediately placing the order in the opposite direction, but with a
 certain percentage of profit.
 
-Tumble (OrderBook-based) strategy is ready-to-use in a Sandbox environment.
-TradeBot will automatically create a sandbox account and do the same things as
-in a real market (except it's just a sandbox and all money here is virtual).
+IMPORTANT NOTE: Tumble (OrderBook-based) strategy is NOT AVAILABLE IN sandbox.
+See https://github.com/Tinkoff/investAPI/issues/176 for details.
 */
 package tumble

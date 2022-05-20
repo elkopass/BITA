@@ -2,6 +2,7 @@ package tumble
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/elkopass/BITA/internal/config"
 	"github.com/elkopass/BITA/internal/loggy"
@@ -47,24 +48,29 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 		return err
 	}
 
+	if config.TradeBotConfig().IsSandbox {
+		return errors.New("strategy is not available in sandbox, " +
+			"see https://github.com/Tinkoff/investAPI/issues/176")
+	} else {
+		oss := sdk.NewOrdersStreamService()
+		tradesStream, err := oss.TradesStream(&pb.TradesStreamRequest{Accounts: []string{tb.accountID}})
+		if err != nil {
+			tb.logger.Fatal(err)
+		}
+		tb.tradesStream = tradesStream
+	}
+
 	figi := config.TradeBotConfig().Figi
+
+	var instruments []*pb.OrderBookInstrument
+	for _, f := range figi {
+		instruments = append(instruments, &pb.OrderBookInstrument{Figi: f, Depth: int32(tb.config.OrderBookDepth)})
+	}
 
 	mdss := sdk.NewMarketDataStreamService()
 	marketDataStream, err := mdss.MarketDataStream()
 	if err != nil {
 		tb.logger.Fatal(err)
-	}
-
-	oss := sdk.NewOrdersStreamService()
-	tradesStream, err := oss.TradesStream(&pb.TradesStreamRequest{Accounts: []string{tb.accountID}})
-	if err != nil {
-		tb.logger.Fatal(err)
-	}
-	tb.tradesStream = tradesStream
-
-	var instruments []*pb.OrderBookInstrument
-	for _, f := range figi {
-		instruments = append(instruments, &pb.OrderBookInstrument{Figi: f, Depth: int32(tb.config.OrderBookDepth)})
 	}
 
 	request := pb.SubscribeOrderBookRequest{
@@ -78,8 +84,8 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 		return err
 	}
 
-	ctx, cancelTradeStreamListener := context.WithCancel(context.Background())
-	go tb.listenTradeStream(ctx)
+	tradeStreamCtx, cancelTradeStreamListener := context.WithCancel(context.Background())
+	go tb.listenTradeStream(tradeStreamCtx)
 
 	for {
 		msg, err := marketDataStream.Recv()
@@ -125,6 +131,7 @@ func (tb *TradeBot) setAccountID() error {
 		}
 		tb.logger.Infof("created new account with ID %s", accountID)
 
+		tb.logger = tb.logger.With("account_id", accountID)
 		tb.accountID = accountID
 	} else {
 		info, err := services.UsersService.GetInfo()
@@ -134,7 +141,6 @@ func (tb *TradeBot) setAccountID() error {
 		tb.logger.Infof("user tariff: %s, qualified for work with %s",
 			info.Tariff, strings.Join(info.QualifiedForWorkWith, ","))
 
-		// replace logger
 		tb.logger = tb.logger.With("account_id", accountID)
 		tb.accountID = accountID
 	}
@@ -150,19 +156,17 @@ func (tb *TradeBot) listenTradeStream(ctx context.Context) {
 		}
 
 		orderTrades := msg.GetOrderTrades()
-		if orderTrades == nil {
-			continue
+		if orderTrades != nil {
+			tb.logger.With("order_id", orderTrades.OrderId).
+				With("figi", orderTrades.Figi).
+				Info("order is fulfilled")
+
+			delete(tb.orders, orderTrades.Figi)
+			go tb.checkPortfolio()
 		}
 
-		tb.logger.With("order_id", orderTrades.OrderId).
-			With("figi", orderTrades.Figi).
-			Info("order is fulfilled")
-
-		delete(tb.orders, orderTrades.Figi)
-		go tb.checkPortfolio()
-
 		select {
-		case <-time.After(1 * time.Millisecond):
+		case <-time.After(1000 * time.Millisecond):
 			// pass
 		case <-ctx.Done():
 			tb.logger.Debug("stop trade stream listener")
@@ -232,6 +236,7 @@ func (tb *TradeBot) tryToBuy(orderBook *pb.OrderBook) {
 
 	var order Order
 
+	order.SellFlag = false
 	order.OrderID = orderResponse.OrderId
 	order.OrderPrice = &pb.MoneyValue{
 		Units:    fairPrice.Units,
@@ -286,6 +291,7 @@ func (tb *TradeBot) tryToSell(orderBook *pb.OrderBook) {
 
 	var order Order
 
+	order.SellFlag = true
 	order.OrderID = orderResponse.OrderId
 	order.OrderPrice = &pb.MoneyValue{
 		Units:    fairPrice.Units,
