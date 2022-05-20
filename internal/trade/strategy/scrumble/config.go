@@ -13,9 +13,9 @@ type TradeConfig struct {
 	StopLossCoef   float64 `default:"0.97" split_words:"true"`
 	TakeProfitCoef float64 `default:"1.02" split_words:"true"`
 
-	MMAIntervalSeconds int `default:"6480000" split_words:"true"`
+	MMAIntervalSeconds int `default:"518400" split_words:"true"`
 
-	WorkerSleepDurationSeconds int `default:"30" split_words:"true"`
+	WorkerSleepDurationSeconds int `default:"10" split_words:"true"`
 }
 
 func NewTradeConfig() *TradeConfig {

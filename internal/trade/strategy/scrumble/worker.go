@@ -91,7 +91,6 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 		case <-ctx.Done():
 			// TODO: implement sell logic on interrupt
 			tw.logger.Info("worker stopped!")
-
 			return nil
 		}
 	}
@@ -269,6 +268,7 @@ func (tw *TradeWorker) tryToSellInstrument() {
 // tryToSellInstrument calls sdk.MarketDataService.GetOrderBook and if trendIsOkToBuy
 // the order will be placed and orderID will be set along with orderPrice.
 func (tw *TradeWorker) tryToBuyInstrument() {
+
 	trendIsOK, _ := tw.trendIsOkToBuy()
 	if !trendIsOK {
 		return // wait for the next turn
@@ -360,6 +360,7 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 		timestamppb.Now(),
 		pb.CandleInterval_CANDLE_INTERVAL_HOUR,
 	)
+
 	if err != nil {
 		tw.breaker.IncFailures()
 		return false, errors.New("error getting short candles: " + err.Error())
@@ -382,8 +383,8 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 	li := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(shortCandles)), len(shortCandles)-3)
 
 	longMMA := li.Calculate(len(shortCandles) - 4).Float()
-	tw.logger.Debugf("calculated shortMMA: %f", shortMMA)
-	tw.logger.Debugf("calculated shortMMA: %f", longMMA)
+	tw.logger.Infof("calculated shortMMA: %f", shortMMA)
+	tw.logger.Infof("calculated shortMMA: %f", longMMA)
 
 	if shortMMA > longMMA {
 		tw.whichIsBigger = "short"

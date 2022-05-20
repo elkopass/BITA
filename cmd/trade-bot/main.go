@@ -9,6 +9,7 @@ import (
 	"github.com/elkopass/BITA/internal/trade"
 	"github.com/elkopass/BITA/internal/trade/strategy"
 	"github.com/elkopass/BITA/internal/trade/strategy/gamble"
+	"github.com/elkopass/BITA/internal/trade/strategy/scrumble"
 	"github.com/elkopass/BITA/internal/trade/strategy/tumble"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
@@ -51,6 +52,10 @@ func main() {
 		bot = gamble.NewTradeBot()
 	case strategy.TUMBLE:
 		bot = tumble.NewTradeBot()
+
+	case strategy.SCRUMBLE:
+		bot = scrumble.NewTradeBot()
+
 	default:
 		log.Fatalf("unknown strategy '%s'", cnf.Strategy)
 		return
