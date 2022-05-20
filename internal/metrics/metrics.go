@@ -38,6 +38,11 @@ var (
 		Name: "tradebot_orders_fulfilled",
 		Help: "Fulfilled orders total counter",
 	}, []string{"bot_id", "figi", "direction"})
+	// OrdersCancelled counts number or cancelled orders
+	OrdersCancelled = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "tradebot_orders_cancelled",
+		Help: "Cancelled orders total counter",
+	}, []string{"bot_id", "figi"})
 	// StopLossDecisions counts number of stop loss decisions by trade bot.
 	StopLossDecisions = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "tradebot_stop_loss_decisions",
@@ -102,6 +107,7 @@ func init() {
 	prometheus.MustRegister(InstrumentsPurchased)
 	prometheus.MustRegister(OrdersPlaced)
 	prometheus.MustRegister(OrdersFulfilled)
+	prometheus.MustRegister(OrdersCancelled)
 	prometheus.MustRegister(StopLossDecisions)
 	prometheus.MustRegister(TakeProfitDecisions)
 	prometheus.MustRegister(StoppedByCircuitBreaker)

@@ -79,6 +79,8 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 					tw.logger.With("order_id", tw.orderID).Debug("order is still placed")
 					if tw.orderBuyTime - time.Now().Unix() > config.TradeBotConfig().TimeToCancel {
 						tw.tryToSellInstrument()
+						tw.logger.With("order_id", tw.orderID).Debug("order is cancelled")
+						metrics.OrdersCancelled.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
 					}
 				}
 				continue
