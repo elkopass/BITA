@@ -24,8 +24,13 @@ func main() {
 	// validate configuration
 	cnf := config.TradeBotConfig()
 	if cnf.Token == "<your_api_token>" {
-		// TODO: make test request to API with this token to validate it
 		log.Fatalf("please set your own API token in TRADEBOT_TOKEN env variable")
+	} else {
+		service := sdk.NewSandboxService()
+		_, err := service.GetSandboxAccounts()
+		if err != nil {
+			log.Fatalf("your API Token does not exist")
+		}
 	}
 
 	if cnf.IsSandbox {
