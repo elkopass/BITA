@@ -26,7 +26,8 @@ type tradeBotConfig struct {
 	Env        string `default:"UNSPECIFIED"`
 	LogLevel   string `default:"INFO" split_words:"true"`
 	Strategy   string `default:"gamble"`
-	SellOnExit string `default:"false" split_words:"true"`
+	SellOnExit bool `default:"false" split_words:"true"`
+	TimeToCancel int64 `default:"3600" split_words:"true"`
 }
 
 type metricsConfig struct {

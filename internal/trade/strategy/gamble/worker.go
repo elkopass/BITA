@@ -23,6 +23,7 @@ type TradeWorker struct {
 	Figi      string
 	orderID   string
 	accountID string
+	orderBuyTime int64
 
 	sellFlag   bool           // if true, worker is trying to sell assets
 	orderPrice *pb.MoneyValue // if order is set
@@ -76,7 +77,9 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 					go tw.checkPortfolio()
 				} else {
 					tw.logger.With("order_id", tw.orderID).Debug("order is still placed")
-					// TODO: implement 'need to cancel' check
+					if tw.orderBuyTime - time.Now().Unix() > config.TradeBotConfig().TimeToCancel {
+						tw.tryToSellInstrument()
+					}
 				}
 				continue
 			}
@@ -87,12 +90,74 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 				tw.tryToBuyInstrument()
 			}
 		case <-ctx.Done():
-			// TODO: implement sell logic on interrupt
+			if config.TradeBotConfig().SellOnExit {
+				err := tw.sellOnExit()
+				if err != nil {
+					return err
+				}
+			}
 			tw.logger.Info("worker stopped!")
 
 			return nil
 		}
 	}
+}
+
+func (tw TradeWorker) sellOnExit() error {
+	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
+	if err != nil {
+		tw.logger.Errorf("error getting order book: %v", err)
+		tw.breaker.IncFailures()
+		return err
+	}
+
+	fairPrice, err := tradeutil.CalculateFairBuyPrice(*orderBook)
+	if err != nil {
+		tw.logger.Errorf("can not calculate fair price: %v", err)
+		return err
+	}
+
+	orderRequest := &pb.PostOrderRequest{
+		Figi:      tw.Figi,
+		OrderId:   uuid.New().String(),
+		Quantity:  int64(tw.config.LotsToBuy),
+		Price:     fairPrice,
+		AccountId: tw.accountID,
+		OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
+		Direction: pb.OrderDirection_ORDER_DIRECTION_SELL,
+	}
+
+	var orderResponse *pb.PostOrderResponse
+	if config.TradeBotConfig().IsSandbox {
+		orderResponse, err = services.SandboxService.PostSandboxOrder(orderRequest)
+	} else {
+		orderResponse, err = services.OrdersService.PostOrder(orderRequest)
+	}
+
+	if err != nil {
+		tw.logger.Errorf("can not post sell order: %v", err)
+		tw.breaker.IncFailures()
+		return err
+	}
+
+	tw.orderID = orderResponse.OrderId
+	tw.orderPrice = &pb.MoneyValue{
+		Units:    fairPrice.Units,
+		Nano:     fairPrice.Nano,
+		Currency: orderResponse.InitialOrderPrice.Currency,
+	}
+
+	tw.logger.With("order_id", tw.orderID).
+		Infof("sell order created, fair price: %d.%d, initial price: %d.%d %s, current status: %s",
+			fairPrice.Units, fairPrice.Nano,
+			orderResponse.InitialOrderPrice.Units, orderResponse.InitialOrderPrice.Nano,
+			orderResponse.InitialOrderPrice.Currency, orderResponse.ExecutionReportStatus.String())
+
+	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
+		pb.OrderDirection_ORDER_DIRECTION_SELL.String()).Inc()
+
+	go tw.checkPortfolio()
+	return nil
 }
 
 // checkPortfolio calls sdk.OperationsService.GetPortfolio and updates portfolio metrics.
@@ -324,6 +389,8 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 		Currency: orderResponse.InitialOrderPrice.Currency,
 	}
 
+	tw.orderBuyTime = time.Now().Unix()
+
 	tw.logger.With("order_id", tw.orderID).
 		Infof("buy order created, fair price: %d.%d, initial price: %d.%d %s, current status: %s",
 			fairPrice.Units, fairPrice.Nano,
@@ -432,7 +499,6 @@ func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 
 // handleCancellation unsets orderID.
 func (tw *TradeWorker) handleCancellation() {
-	// TODO: also change metrics
 	tw.logger.With("order_id", tw.orderID).Warn("order is cancelled")
 	tw.orderID = ""
 }
