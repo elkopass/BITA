@@ -416,11 +416,6 @@ func (tw *TradeWorker) trendIsOkToSell() (bool, error) {
 		return false, errors.New("error getting short candles: " + err.Error())
 	}
 
-	if err != nil {
-		tw.breaker.IncFailures()
-		return false, errors.New("error getting long candles: " + err.Error())
-	}
-
 	if len(shortCandles) < 6 {
 		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d and %d",
 			6, len(shortCandles))
