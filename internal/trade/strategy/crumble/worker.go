@@ -1,4 +1,4 @@
-package scrumble
+package crumble
 
 import (
 	"context"
@@ -206,6 +206,11 @@ func (tw *TradeWorker) orderIsFulfilled() bool {
 // tryToSellInstrument calls sdk.MarketDataService.GetOrderBook and if priceIsOkToSell
 // the order will be placed and orderID will be set along with orderPrice.
 func (tw *TradeWorker) tryToSellInstrument() {
+	indicatorIsOK, _ := tw.indicatorIsOkToSell()
+	if !indicatorIsOK {
+		return // wait for the next turn
+	}
+
 	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
 		tw.logger.Errorf("error getting order book: %v", err)
@@ -213,10 +218,6 @@ func (tw *TradeWorker) tryToSellInstrument() {
 		return // just ignoring it
 	}
 
-	trendIsOK, _ := tw.trendIsOkToSell()
-	if !trendIsOK {
-		return // wait for the next turn
-	}
 	fairPrice, err := tradeutil.CalculateFairBuyPrice(*orderBook)
 	if err != nil {
 		tw.logger.Errorf("can not calculate fair price: %v", err)
@@ -265,12 +266,11 @@ func (tw *TradeWorker) tryToSellInstrument() {
 	go tw.checkPortfolio()
 }
 
-// tryToSellInstrument calls sdk.MarketDataService.GetOrderBook and if trendIsOkToBuy
+// tryToSellInstrument calls sdk.MarketDataService.GetOrderBook and if indicatorIsOkToBuy
 // the order will be placed and orderID will be set along with orderPrice.
 func (tw *TradeWorker) tryToBuyInstrument() {
-
-	trendIsOK, _ := tw.trendIsOkToBuy()
-	if !trendIsOK {
+	indicatorIsOK, _ := tw.indicatorIsOkToBuy()
+	if !indicatorIsOK {
 		return // wait for the next turn
 	}
 
@@ -352,11 +352,11 @@ func (tw TradeWorker) tradingStatusIsOkToTrade() bool {
 	return status.TradingStatus == pb.SecurityTradingStatus_SECURITY_TRADING_STATUS_NORMAL_TRADING
 }
 
-func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
-
-	shortCandles, err := services.MarketDataService.GetCandles(
+// indicatorIsOkToBuy checks MA-indicator and returns true if it's OK to buy.
+func (tw *TradeWorker) indicatorIsOkToBuy() (bool, error) {
+	candles, err := services.MarketDataService.GetCandles(
 		tw.Figi,
-		timestamppb.New(time.Now().Add(-time.Duration(tw.config.MMAIntervalSeconds)*time.Second)),
+		timestamppb.New(time.Now().Add(-time.Duration(tw.config.CandlesIntervalHours)*time.Hour)),
 		timestamppb.Now(),
 		pb.CandleInterval_CANDLE_INTERVAL_HOUR,
 	)
@@ -366,23 +366,19 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 		return false, errors.New("error getting short candles: " + err.Error())
 	}
 
-	if err != nil {
-		tw.breaker.IncFailures()
-		return false, errors.New("error getting long candles: " + err.Error())
-	}
-
-	if len(shortCandles) < 6 {
+	minCandles := tw.config.LongWindow + 1
+	if len(candles) < minCandles {
 		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d and %d",
-			6, len(shortCandles))
+			minCandles, len(candles))
 		return false, nil
 	}
-	si := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(shortCandles)), 7)
 
-	shortMMA := si.Calculate(6).Float()
+	si := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(candles)), tw.config.ShortWindow)
+	li := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(candles)), tw.config.LongWindow)
 
-	li := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(shortCandles)), len(shortCandles)-3)
+	shortMMA := si.Calculate(0).Float()
+	longMMA := li.Calculate(0).Float()
 
-	longMMA := li.Calculate(len(shortCandles) - 4).Float()
 	tw.logger.Infof("calculated shortMMA: %f", shortMMA)
 	tw.logger.Infof("calculated shortMMA: %f", longMMA)
 
@@ -403,11 +399,11 @@ func (tw *TradeWorker) trendIsOkToBuy() (bool, error) {
 	return false, nil
 }
 
-// priceIsOkToSell returns true if (price > expected profit) or (price < expected loss).
-func (tw *TradeWorker) trendIsOkToSell() (bool, error) {
-	shortCandles, err := services.MarketDataService.GetCandles(
+// indicatorIsOkToSell checks MA-indicator once again and returns true if it's OK to sell.
+func (tw *TradeWorker) indicatorIsOkToSell() (bool, error) {
+	candles, err := services.MarketDataService.GetCandles(
 		tw.Figi,
-		timestamppb.New(time.Now().Add(-time.Duration(tw.config.MMAIntervalSeconds)*time.Second)),
+		timestamppb.New(time.Now().Add(-time.Duration(tw.config.CandlesIntervalHours)*time.Hour)),
 		timestamppb.Now(),
 		pb.CandleInterval_CANDLE_INTERVAL_HOUR,
 	)
@@ -416,18 +412,19 @@ func (tw *TradeWorker) trendIsOkToSell() (bool, error) {
 		return false, errors.New("error getting short candles: " + err.Error())
 	}
 
-	if len(shortCandles) < 6 {
+	minCandles := tw.config.LongWindow + 1
+	if len(candles) < minCandles {
 		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d and %d",
-			6, len(shortCandles))
+			minCandles, len(candles))
 		return false, nil
 	}
-	si := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(shortCandles)), 7)
 
-	shortMMA := si.Calculate(6).Float()
+	si := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(candles)), tw.config.ShortWindow)
+	li := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(candles)), tw.config.LongWindow)
 
-	li := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(shortCandles)), len(shortCandles)-3)
+	shortMMA := si.Calculate(0).Float()
+	longMMA := li.Calculate(0).Float()
 
-	longMMA := li.Calculate(len(shortCandles) - 4).Float()
 	tw.logger.Debugf("calculated shortMMA: %f", shortMMA)
 	tw.logger.Debugf("calculated shortMMA: %f", longMMA)
 
@@ -450,6 +447,8 @@ func (tw *TradeWorker) trendIsOkToSell() (bool, error) {
 
 // handleCancellation unsets orderID.
 func (tw *TradeWorker) handleCancellation() {
+	metrics.OrdersCancelled.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
+
 	tw.logger.With("order_id", tw.orderID).Warn("order is cancelled")
 	tw.orderID = ""
 }
