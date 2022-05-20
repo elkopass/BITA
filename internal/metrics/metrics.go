@@ -38,7 +38,7 @@ var (
 		Name: "tradebot_orders_fulfilled",
 		Help: "Fulfilled orders total counter",
 	}, []string{"bot_id", "figi", "direction"})
-	// OrdersCancelled counts number or cancelled orders
+	// OrdersCancelled counts number or cancelled orders.
 	OrdersCancelled = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "tradebot_orders_cancelled",
 		Help: "Cancelled orders total counter",

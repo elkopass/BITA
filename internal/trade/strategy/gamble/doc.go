@@ -29,6 +29,8 @@ Strategy is pretty straightforward:
 	2.4.2. If (close price / TradeWorker.orderPrice) is below
 		   TradeConfig.StopLossCoef, bot will create an order to stop further loss.
 	2.4.3. Or it will sleep till an asset's price stays still.
+	2.4.4. If order is not fulfilled longer than TradeConfig.SecondsToCancelOrder,
+		   order will be cancelled.
 	2.5. If TradeWorker receives an interrupt signal, it will check a SellOnExit value
 		 in global config. If it's 'true', bot will try to create a sell order based on
 		 current market price. In other way it will just gracefully exit.

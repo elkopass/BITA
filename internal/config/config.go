@@ -14,20 +14,19 @@ const (
 	DefaultRequestTimeout = 30 * time.Second
 
 	CircuitBreakerMaxFailures = 5
-	CircuitBreakerRefreshTime = 30 * time.Minute
+	CircuitBreakerRefreshTime = 60 * time.Minute
 )
 
 type tradeBotConfig struct {
 	Figi []string `required:"true"`
 
-	IsSandbox    bool   `required:"true" split_words:"true"`
-	Token        string `required:"true"`
-	AccountID    string `split_words:"true"` // required in non-sandbox mode
-	Env          string `default:"UNSPECIFIED"`
-	LogLevel     string `default:"DEBUG" split_words:"true"`
-	Strategy     string `default:"gamble"`
-	SellOnExit   bool   `default:"false" split_words:"true"`
-	TimeToCancel int64  `default:"3600" split_words:"true"`
+	IsSandbox  bool   `required:"true" split_words:"true"`
+	Token      string `required:"true"`
+	AccountID  string `split_words:"true"` // required in non-sandbox mode
+	Env        string `default:"UNSPECIFIED"`
+	LogLevel   string `default:"DEBUG" split_words:"true"`
+	Strategy   string `default:"gamble"`
+	SellOnExit bool   `default:"false" split_words:"true"`
 }
 
 type metricsConfig struct {

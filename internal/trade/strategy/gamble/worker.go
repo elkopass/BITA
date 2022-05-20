@@ -19,14 +19,14 @@ import (
 )
 
 type TradeWorker struct {
-	ID           string
-	Figi         string
-	orderID      string
-	accountID    string
-	orderBuyTime int64
+	ID        string
+	Figi      string
+	orderID   string
+	accountID string
 
-	sellFlag   bool           // if true, worker is trying to sell assets
-	orderPrice *pb.MoneyValue // if order is set
+	sellFlag        bool           // if true, worker is trying to sell assets
+	orderPrice      *pb.MoneyValue // if order is set
+	orderPlacedTime *int64         // if order is set
 
 	logger  *zap.SugaredLogger
 	breaker cb.CircuitBreaker
@@ -77,14 +77,7 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 					go tw.checkPortfolio()
 				} else {
 					tw.logger.With("order_id", tw.orderID).Debug("order is still placed")
-					if tw.orderBuyTime-time.Now().Unix() > config.TradeBotConfig().TimeToCancel {
-						_, err := services.OrdersService.CancelOrder(tw.accountID, tw.orderID)
-						if err != nil {
-							return err
-						}
-						tw.logger.With("order_id", tw.orderID).Debug("order is cancelled")
-						metrics.OrdersCancelled.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
-					}
+					tw.checkNeedForCancel()
 				}
 				continue
 			}
@@ -95,13 +88,12 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 				tw.tryToBuyInstrument()
 			}
 		case <-ctx.Done():
-			if config.TradeBotConfig().SellOnExit {
-				err := tw.sellOnExit()
-				if err != nil {
-					return err
-				}
-			}
 			tw.logger.Info("worker stopped!")
+			if config.TradeBotConfig().SellOnExit && tw.sellFlag {
+				tw.logger.Info("SELL_ON_EXIT flag is set, trying to sell an asset...")
+				err := tw.sellOnExit()
+				return err
+			}
 
 			return nil
 		}
@@ -128,7 +120,7 @@ func (tw TradeWorker) sellOnExit() error {
 		Quantity:  int64(tw.config.LotsToBuy),
 		Price:     fairPrice,
 		AccountId: tw.accountID,
-		OrderType: pb.OrderType_ORDER_TYPE_LIMIT,
+		OrderType: pb.OrderType_ORDER_TYPE_MARKET,
 		Direction: pb.OrderDirection_ORDER_DIRECTION_SELL,
 	}
 
@@ -161,7 +153,6 @@ func (tw TradeWorker) sellOnExit() error {
 	metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
 		pb.OrderDirection_ORDER_DIRECTION_SELL.String()).Inc()
 
-	go tw.checkPortfolio()
 	return nil
 }
 
@@ -324,6 +315,9 @@ func (tw *TradeWorker) tryToSellInstrument() {
 		Currency: orderResponse.InitialOrderPrice.Currency,
 	}
 
+	t := time.Now().Unix()
+	tw.orderPlacedTime = &t
+
 	tw.logger.With("order_id", tw.orderID).
 		Infof("sell order created, fair price: %d.%d, initial price: %d.%d %s, current status: %s",
 			fairPrice.Units, fairPrice.Nano,
@@ -394,7 +388,8 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 		Currency: orderResponse.InitialOrderPrice.Currency,
 	}
 
-	tw.orderBuyTime = time.Now().Unix()
+	t := time.Now().Unix()
+	tw.orderPlacedTime = &t
 
 	tw.logger.With("order_id", tw.orderID).
 		Infof("buy order created, fair price: %d.%d, initial price: %d.%d %s, current status: %s",
@@ -502,8 +497,23 @@ func (tw *TradeWorker) priceIsOkToSell(orderBook pb.GetOrderBookResponse) bool {
 	return false
 }
 
+// checkNeedForCancel tries to cancel orders older than TradeConfig.SecondsToCancelOrder.
+func (tw *TradeWorker) checkNeedForCancel() {
+	if *tw.orderPlacedTime-time.Now().Unix() > tw.config.SecondsToCancelOrder {
+		_, err := services.OrdersService.CancelOrder(tw.accountID, tw.orderID)
+		if err != nil {
+			tw.logger.Warnf("can not cancel order: %v", err)
+			return
+		}
+
+		tw.handleCancellation()
+	}
+}
+
 // handleCancellation unsets orderID.
 func (tw *TradeWorker) handleCancellation() {
+	metrics.OrdersCancelled.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
+
 	tw.logger.With("order_id", tw.orderID).Warn("order is cancelled")
 	tw.orderID = ""
 }
