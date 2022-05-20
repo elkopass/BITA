@@ -17,7 +17,7 @@ type TradeConfig struct {
 	LongWindow           int `default:"75" split_words:"true"`
 	CandlesIntervalHours int `default:"144" split_words:"true"`
 
-	WorkerSleepDurationSeconds int64 `default:"10" split_words:"true"`
+	WorkerSleepDurationSeconds int64 `default:"30" split_words:"true"`
 	SecondsToCancelOrder       int64 `default:"3600" split_words:"true"`
 }
 

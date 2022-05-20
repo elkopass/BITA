@@ -18,6 +18,9 @@ import (
 	"time"
 )
 
+const minCandles = 10
+const candlesOffset = 3
+
 type TradeWorker struct {
 	ID        string
 	Figi      string
@@ -436,7 +439,6 @@ func (tw *TradeWorker) indicatorIsOkToBuy() (bool, error) {
 		return false, errors.New("error getting short candles: " + err.Error())
 	}
 
-	minCandles := tw.config.LongWindow + 1
 	if len(candles) < minCandles {
 		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d",
 			minCandles, len(candles))
@@ -446,8 +448,8 @@ func (tw *TradeWorker) indicatorIsOkToBuy() (bool, error) {
 	si := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(candles)), tw.config.ShortWindow)
 	li := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(candles)), tw.config.LongWindow)
 
-	shortMMA := si.Calculate(0).Float()
-	longMMA := li.Calculate(0).Float()
+	shortMMA := si.Calculate(len(candles) - candlesOffset).Float()
+	longMMA := li.Calculate(len(candles) - candlesOffset).Float()
 
 	tw.logger.Infof("calculated short MMA: %f", shortMMA)
 	tw.logger.Infof("calculated long MMA: %f", longMMA)
@@ -485,7 +487,6 @@ func (tw *TradeWorker) indicatorIsOkToSell() (bool, error) {
 		return false, errors.New("error getting short candles: " + err.Error())
 	}
 
-	minCandles := tw.config.LongWindow + 1
 	if len(candles) < minCandles {
 		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d",
 			minCandles, len(candles))
@@ -495,8 +496,8 @@ func (tw *TradeWorker) indicatorIsOkToSell() (bool, error) {
 	si := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(candles)), tw.config.ShortWindow)
 	li := techan.NewMMAIndicator(techan.NewClosePriceIndicator(tradeutil.CandlesToTimeSeries(candles)), tw.config.LongWindow)
 
-	shortMMA := si.Calculate(0).Float()
-	longMMA := li.Calculate(0).Float()
+	shortMMA := si.Calculate(len(candles) - candlesOffset).Float()
+	longMMA := li.Calculate(len(candles) - candlesOffset).Float()
 
 	tw.logger.Debugf("calculated short MMA: %f", shortMMA)
 	tw.logger.Debugf("calculated long MMA: %f", longMMA)
