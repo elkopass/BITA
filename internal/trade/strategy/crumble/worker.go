@@ -452,17 +452,20 @@ func (tw *TradeWorker) indicatorIsOkToBuy() (bool, error) {
 	tw.logger.Infof("calculated short MMA: %f", shortMMA)
 	tw.logger.Infof("calculated long MMA: %f", longMMA)
 
+	var nowBiggerAverage string
 	if shortMMA > longMMA {
-		tw.whichAverageIsBigger = "short"
-		return false, nil
+		nowBiggerAverage = "short"
+	} else {
+		nowBiggerAverage = "long"
 	}
-	if shortMMA < longMMA {
-		tw.whichAverageIsBigger = "long"
+
+	if tw.whichAverageIsBigger == "" {
+		tw.whichAverageIsBigger = nowBiggerAverage
 		return false, nil
 	}
 
-	if shortMMA == longMMA && tw.whichAverageIsBigger == "short" {
-		tw.whichAverageIsBigger = "long"
+	if nowBiggerAverage != tw.whichAverageIsBigger {
+		tw.whichAverageIsBigger = nowBiggerAverage
 		return true, nil
 	}
 
@@ -498,17 +501,20 @@ func (tw *TradeWorker) indicatorIsOkToSell() (bool, error) {
 	tw.logger.Debugf("calculated short MMA: %f", shortMMA)
 	tw.logger.Debugf("calculated long MMA: %f", longMMA)
 
+	var nowBiggerAverage string
 	if shortMMA > longMMA {
-		tw.whichAverageIsBigger = "short"
-		return false, nil
+		nowBiggerAverage = "short"
+	} else {
+		nowBiggerAverage = "long"
 	}
-	if shortMMA < longMMA {
-		tw.whichAverageIsBigger = "long"
+
+	if tw.whichAverageIsBigger == "" {
+		tw.whichAverageIsBigger = nowBiggerAverage
 		return false, nil
 	}
 
-	if shortMMA == longMMA && tw.whichAverageIsBigger == "long" {
-		tw.whichAverageIsBigger = "short"
+	if nowBiggerAverage != tw.whichAverageIsBigger {
+		tw.whichAverageIsBigger = nowBiggerAverage
 		return true, nil
 	}
 
