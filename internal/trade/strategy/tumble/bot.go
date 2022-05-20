@@ -14,7 +14,6 @@ import (
 
 type TradeBot struct {
 	config      TradeConfig
-	cancelFuncs []context.CancelFunc
 	logger      *zap.SugaredLogger
 }
 
