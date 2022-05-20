@@ -1,4 +1,52 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    }
+  ],
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "bargauge",
+      "name": "Bar gauge",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "8.2.6"
+    },
+    {
+      "type": "datasource",
+      "id": "prometheus",
+      "name": "Prometheus",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "state-timeline",
+      "name": "State timeline",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -22,8 +70,8 @@
   "fiscalYearStartMonth": 0,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
-  "iteration": 1652895597611,
+  "id": null,
+  "iteration": 1653060436151,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -70,6 +118,8 @@
         {
           "exemplar": true,
           "expr": "max(tradebot_info) by (bot_id, sdk_version, selected_strategy, workers)",
+          "format": "table",
+          "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -79,7 +129,19 @@
       "transformations": [
         {
           "id": "organize",
-          "options": {}
+          "options": {
+            "excludeByName": {
+              "Time": true,
+              "Value": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "bot_id": "Bot ID",
+              "sdk_version": "SDK Version",
+              "selected_strategy": "Strategy",
+              "workers": "Workers"
+            }
+          }
         }
       ],
       "type": "table"
@@ -253,7 +315,7 @@
           "exemplar": true,
           "expr": "tradebot_take_profit_decisions{bot_id=~\"$bot_id\",figi=~\"$figi\"}",
           "interval": "",
-          "legendFormat": "TAKE PROFIT {{figi}} (bot-{{bot_id}})",
+          "legendFormat": "{{figi}} (bot-{{bot_id}})",
           "refId": "A"
         }
       ],
@@ -536,7 +598,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 5,
+        "h": 3,
         "w": 24,
         "x": 0,
         "y": 28
@@ -575,7 +637,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 31
       },
       "id": 6,
       "panels": [],
@@ -614,7 +676,7 @@
         "h": 4,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 32
       },
       "id": 32,
       "options": {
@@ -697,9 +759,9 @@
       },
       "gridPos": {
         "h": 9,
-        "w": 24,
+        "w": 6,
         "x": 0,
-        "y": 38
+        "y": 36
       },
       "id": 2,
       "maxPerRow": 4,
@@ -734,7 +796,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 54
       },
       "id": 8,
       "panels": [],
@@ -799,7 +861,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 57
+        "y": 55
       },
       "id": 21,
       "options": {
@@ -881,7 +943,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 57
+        "y": 55
       },
       "id": 22,
       "options": {
@@ -913,7 +975,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 67
+        "y": 65
       },
       "id": 24,
       "panels": [],
@@ -950,7 +1012,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 68
+        "y": 66
       },
       "id": 4,
       "options": {
@@ -989,16 +1051,8 @@
     "list": [
       {
         "allValue": null,
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": null,
+        "current": {},
+        "datasource": "${DS_PROMETHEUS}",
         "definition": "label_values(tradebot_portfolio_instruments_amount, account_id)",
         "description": null,
         "error": null,
@@ -1020,16 +1074,8 @@
       },
       {
         "allValue": null,
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": null,
+        "current": {},
+        "datasource": "${DS_PROMETHEUS}",
         "definition": "label_values(tradebot_api_requests, bot_id)",
         "description": null,
         "error": null,
@@ -1051,16 +1097,8 @@
       },
       {
         "allValue": null,
-        "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": null,
+        "current": {},
+        "datasource": "${DS_PROMETHEUS}",
         "definition": "label_values(tradebot_orders_placed{bot_id=~\"$bot_id\"}, figi)",
         "description": null,
         "error": null,
@@ -1082,16 +1120,8 @@
       },
       {
         "allValue": null,
-        "current": {
-          "selected": true,
-          "text": [
-            "MarketDataService"
-          ],
-          "value": [
-            "MarketDataService"
-          ]
-        },
-        "datasource": null,
+        "current": {},
+        "datasource": "${DS_PROMETHEUS}",
         "definition": "label_values(tradebot_api_requests, service)",
         "description": null,
         "error": null,
@@ -1114,12 +1144,12 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "TradeBot",
   "uid": "BO_RHo_nk",
-  "version": 15
+  "version": 18
 }
