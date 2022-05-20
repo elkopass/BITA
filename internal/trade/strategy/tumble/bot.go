@@ -77,7 +77,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 			if config.TradeBotConfig().IsSandbox {
 				err = services.SandboxService.CloseSandboxAccount(tb.accountID)
 				if err != nil {
-					tb.logger.Errorf("can't create account: %v", err)
+					tb.logger.Errorf("can't close an account: %v", err)
 				}
 				tb.logger.Infof("account with ID %s closed successfully", tb.accountID)
 			}
