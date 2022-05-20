@@ -13,8 +13,6 @@ type TradeConfig struct {
 
 	AsksBidsRatio float64 `default:"1.5" split_words:"true"`
 	BidsAsksRatio float64 `default:"1.5" split_words:"true"`
-
-	WorkerSleepDurationSeconds int `default:"30" split_words:"true"`
 }
 
 func NewTradeConfig() *TradeConfig {

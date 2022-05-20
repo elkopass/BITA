@@ -121,10 +121,10 @@ func (tb *TradeBot) makeDecision(orderBook *pb.OrderBook) {
 		bidsQuantity += bid.Quantity
 	}
 
-	if float64(bidsQuantity / asksQuantity) > tb.config.BidsAsksRatio {
+	if float64(bidsQuantity/asksQuantity) > tb.config.BidsAsksRatio {
 		tb.tryToBuy(orderBook)
 	}
-	if float64(asksQuantity / bidsQuantity) > tb.config.AsksBidsRatio {
+	if float64(asksQuantity/bidsQuantity) > tb.config.AsksBidsRatio {
 		tb.tryToSell(orderBook)
 	}
 }
