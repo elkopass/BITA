@@ -11,6 +11,9 @@ var services = sdk.NewServicePool()
 type TradeConfig struct {
 	LotsToBuy int `default:"1" split_words:"true"`
 
+	AsksBidsRatio float64 `default:"1.5" split_words:"true"`
+	BidsAsksRatio float64 `default:"1.5" split_words:"true"`
+
 	WorkerSleepDurationSeconds int `default:"30" split_words:"true"`
 }
 

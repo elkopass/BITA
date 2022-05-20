@@ -38,10 +38,27 @@ func printAvailableFigiList() {
 		os.Exit(1)
 	}
 
+	fmt.Println("Available shares:")
 	for _, share := range shares {
 		if share.TradingStatus == pb.SecurityTradingStatus_SECURITY_TRADING_STATUS_NORMAL_TRADING {
 			message := fmt.Sprintf("[%s] %s: %s", share.Ticker, share.Name, share.Figi)
 			message += fmt.Sprintf(" (currency: %s, lot: %d)", share.Currency, share.Lot)
+
+			fmt.Println(message)
+		}
+	}
+
+	etfs, err := services.InstrumentsService.Etfs(pb.InstrumentStatus_INSTRUMENT_STATUS_ALL)
+	if err != nil {
+		fmt.Printf("error getting etfs: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Available efts:")
+	for _, etf := range etfs {
+		if etf.TradingStatus == pb.SecurityTradingStatus_SECURITY_TRADING_STATUS_NORMAL_TRADING {
+			message := fmt.Sprintf("[%s] %s: %s", etf.Ticker, etf.Name, etf.Figi)
+			message += fmt.Sprintf(" (currency: %s, lot: %d)", etf.Currency, etf.Lot)
 
 			fmt.Println(message)
 		}

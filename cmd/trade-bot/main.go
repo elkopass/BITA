@@ -23,6 +23,7 @@ func main() {
 	// validate configuration
 	cnf := config.TradeBotConfig()
 	if cnf.Token == "<your_api_token>" {
+		// TODO: make test request to API with this token to validate it
 		log.Fatalf("please set your own API token in TRADEBOT_TOKEN env variable")
 	}
 
@@ -31,7 +32,7 @@ func main() {
 	} else {
 		if cnf.AccountID == "<your_api_token>" {
 			log.Fatalf("please specify your own account ID in TRADEBOT_ACCOUNT_ID env variable " +
-				"(compile and run 'trade-utils -mode accounts' to get it)")
+				"(compile and run '$ trade-utils -mode accounts' to get it)")
 		}
 		log.Warnf("[DANGER] running without sandbox with %s strategy and %s account ID, "+
 			"I hope you know what you doing", cnf.Strategy, cnf.AccountID)
@@ -39,7 +40,7 @@ func main() {
 
 	if len(cnf.Figi) == 2 && cnf.Figi[0] == "<figi1>" {
 		log.Fatalf("please specify some figi's to trade in TRADEBOT_FIGI env variable; " +
-			"if you need some, compile and run 'trade-utils -mode figi' to get them")
+			"if you need some, compile and run '$ trade-utils -mode figi' to get them")
 	}
 
 	// init trade bot

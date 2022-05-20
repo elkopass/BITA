@@ -14,8 +14,9 @@ import (
 )
 
 type TradeBot struct {
-	config      TradeConfig
-	logger      *zap.SugaredLogger
+	accountID string
+	config    TradeConfig
+	logger    *zap.SugaredLogger
 }
 
 func NewTradeBot() *TradeBot {
@@ -28,24 +29,10 @@ func NewTradeBot() *TradeBot {
 func (tb TradeBot) Run(ctx context.Context) (err error) {
 	tb.logger.Infof("starting with %s strategy and sdk v%s", config.TradeBotConfig().Strategy, sdk.Version)
 
-	accountID := config.TradeBotConfig().AccountID
-	if config.TradeBotConfig().IsSandbox {
-		accountID, err = services.SandboxService.OpenSandboxAccount()
-		if err != nil {
-			return fmt.Errorf("can not create account: %v", err)
-		}
-		tb.logger.Infof("created new account with ID %s", accountID)
-	} else {
-		info, err := services.UsersService.GetInfo()
-		if err != nil {
-			return fmt.Errorf("can not get user info: %v", err)
-		}
-		tb.logger.Infof("user tariff: %s, qualified for work with %s",
-			info.Tariff, strings.Join(info.QualifiedForWorkWith, ","))
+	err = tb.setAccountID()
+	if err != nil {
+		return err
 	}
-
-	// replace logger
-	tb.logger = tb.logger.With("account_id", accountID)
 
 	figi := config.TradeBotConfig().Figi
 
@@ -61,7 +48,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	}
 
 	request := pb.SubscribeOrderBookRequest{
-		Instruments: instruments,
+		Instruments:        instruments,
 		SubscriptionAction: pb.SubscriptionAction_SUBSCRIPTION_ACTION_SUBSCRIBE,
 	}
 	payload := &pb.MarketDataRequest_SubscribeOrderBookRequest{SubscribeOrderBookRequest: &request}
@@ -80,21 +67,72 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 		orderBook := res.GetOrderbook()
 		tb.logger.Info(tradeutil.GetFormattedOrderBook(orderBook))
 
+		tb.makeDecision(orderBook)
+
 		select {
 		case <-time.After(1 * time.Millisecond):
 			// pass
 		case <-ctx.Done():
 			// TODO: implement sell logic on interrupt
 			if config.TradeBotConfig().IsSandbox {
-				err = services.SandboxService.CloseSandboxAccount(accountID)
+				err = services.SandboxService.CloseSandboxAccount(tb.accountID)
 				if err != nil {
 					tb.logger.Errorf("can't create account: %v", err)
 				}
-				tb.logger.Infof("account with ID %s closed successfully", accountID)
+				tb.logger.Infof("account with ID %s closed successfully", tb.accountID)
 			}
 
 			tb.logger.Info("bot stopped!")
 			return nil
 		}
 	}
+}
+
+func (tb *TradeBot) setAccountID() error {
+	accountID := config.TradeBotConfig().AccountID
+	if config.TradeBotConfig().IsSandbox {
+		accountID, err := services.SandboxService.OpenSandboxAccount()
+		if err != nil {
+			return fmt.Errorf("can not create account: %v", err)
+		}
+		tb.logger.Infof("created new account with ID %s", accountID)
+	} else {
+		info, err := services.UsersService.GetInfo()
+		if err != nil {
+			return fmt.Errorf("can not get user info: %v", err)
+		}
+		tb.logger.Infof("user tariff: %s, qualified for work with %s",
+			info.Tariff, strings.Join(info.QualifiedForWorkWith, ","))
+	}
+
+	// replace logger
+	tb.logger = tb.logger.With("account_id", accountID)
+	return nil
+}
+
+func (tb *TradeBot) makeDecision(orderBook *pb.OrderBook) {
+	var asksQuantity int64
+	for _, ask := range orderBook.Asks {
+		asksQuantity += ask.Quantity
+	}
+
+	var bidsQuantity int64
+	for _, bid := range orderBook.Bids {
+		bidsQuantity += bid.Quantity
+	}
+
+	if float64(bidsQuantity / asksQuantity) > tb.config.BidsAsksRatio {
+		tb.tryToBuy(orderBook)
+	}
+	if float64(asksQuantity / bidsQuantity) > tb.config.AsksBidsRatio {
+		tb.tryToSell(orderBook)
+	}
+}
+
+func (tb *TradeBot) tryToBuy(*pb.OrderBook) {
+	// TODO: implement me
+}
+
+func (tb *TradeBot) tryToSell(*pb.OrderBook) {
+	// TODO: implement me
 }
