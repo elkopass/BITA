@@ -438,7 +438,7 @@ func (tw *TradeWorker) indicatorIsOkToBuy() (bool, error) {
 
 	minCandles := tw.config.LongWindow + 1
 	if len(candles) < minCandles {
-		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d and %d",
+		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d",
 			minCandles, len(candles))
 		return false, nil
 	}
@@ -487,7 +487,7 @@ func (tw *TradeWorker) indicatorIsOkToSell() (bool, error) {
 
 	minCandles := tw.config.LongWindow + 1
 	if len(candles) < minCandles {
-		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d and %d",
+		tw.logger.Warnf("too few candles to proceed: expecting at least %d, got %d",
 			minCandles, len(candles))
 		return false, nil
 	}
