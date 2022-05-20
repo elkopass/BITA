@@ -89,10 +89,10 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 			}
 		case <-ctx.Done():
 			tw.logger.Info("worker stopped!")
+
 			if config.TradeBotConfig().SellOnExit && tw.sellFlag {
 				tw.logger.Info("SELL_ON_EXIT flag is set, trying to sell an asset...")
-				err := tw.sellOnExit()
-				return err
+				return tw.sellOnExit()
 			}
 
 			return nil
@@ -100,6 +100,7 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 	}
 }
 
+// sellOnExit immediately creates sell order if worker has an instrument.
 func (tw TradeWorker) sellOnExit() error {
 	orderBook, err := services.MarketDataService.GetOrderBook(tw.Figi, 10)
 	if err != nil {
@@ -345,7 +346,7 @@ func (tw *TradeWorker) tryToBuyInstrument() {
 		return // just ignoring it
 	}
 
-	fairPrice, err := tradeutil.CalculateFairBuyPrice(*orderBook)
+	fairPrice, err := tradeutil.CalculateFairSellPrice(*orderBook)
 	if err != nil {
 		tw.logger.Errorf("can not calculate fair price: %v", err)
 		return // try again next time
@@ -515,5 +516,6 @@ func (tw *TradeWorker) handleCancellation() {
 	metrics.OrdersCancelled.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
 
 	tw.logger.With("order_id", tw.orderID).Warn("order is cancelled")
+	tw.orderPlacedTime = nil
 	tw.orderID = ""
 }
