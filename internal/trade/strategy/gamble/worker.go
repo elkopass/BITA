@@ -19,10 +19,10 @@ import (
 )
 
 type TradeWorker struct {
-	ID        string
-	Figi      string
-	orderID   string
-	accountID string
+	ID           string
+	Figi         string
+	orderID      string
+	accountID    string
 	orderBuyTime int64
 
 	sellFlag   bool           // if true, worker is trying to sell assets
@@ -77,8 +77,11 @@ func (tw TradeWorker) Run(ctx context.Context, wg *sync.WaitGroup) (err error) {
 					go tw.checkPortfolio()
 				} else {
 					tw.logger.With("order_id", tw.orderID).Debug("order is still placed")
-					if tw.orderBuyTime - time.Now().Unix() > config.TradeBotConfig().TimeToCancel {
-						tw.tryToSellInstrument()
+					if tw.orderBuyTime-time.Now().Unix() > config.TradeBotConfig().TimeToCancel {
+						_, err := services.OrdersService.CancelOrder(tw.accountID, tw.orderID)
+						if err != nil {
+							return err
+						}
 						tw.logger.With("order_id", tw.orderID).Debug("order is cancelled")
 						metrics.OrdersCancelled.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
 					}
