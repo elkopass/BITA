@@ -7,6 +7,7 @@ import (
 	"github.com/elkopass/BITA/internal/loggy"
 	pb "github.com/elkopass/BITA/internal/proto"
 	"github.com/elkopass/BITA/internal/sdk"
+	tradeutil "github.com/elkopass/BITA/internal/trade/util"
 	"go.uber.org/zap"
 	"strings"
 	"time"
@@ -77,7 +78,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 		}
 
 		orderBook := res.GetOrderbook()
-		tb.logger.Info(orderBook)
+		tb.logger.Info(tradeutil.GetFormattedOrderBook(orderBook))
 
 		select {
 		case <-time.After(1 * time.Millisecond):

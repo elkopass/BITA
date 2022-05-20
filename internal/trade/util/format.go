@@ -57,3 +57,20 @@ func GetFormattedPositions(positions []*pb.PortfolioPosition) string {
 
 	return formattedPositions
 }
+
+// GetFormattedOrderBook returns order book in a pretty-formatted string to print.
+func GetFormattedOrderBook(orderBook *pb.OrderBook) string {
+	formattedOrderBook := "bids: "
+	for _, b := range orderBook.Bids {
+		price := QuotationToFloat(*b.Price)
+		formattedOrderBook += fmt.Sprintf("%f (%d) ", price, b.Quantity)
+	}
+
+	formattedOrderBook += " | asks: "
+	for _, a := range orderBook.Asks {
+		price := QuotationToFloat(*a.Price)
+		formattedOrderBook += fmt.Sprintf("%f (%d) ", price, a.Quantity)
+	}
+
+	return formattedOrderBook
+}
