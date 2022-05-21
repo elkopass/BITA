@@ -4,11 +4,11 @@
 
 Trading **B**ot based on [**I**nvest **T**inkoff **A**PI](https://github.com/Tinkoff/investAPI)
 
-![TradeBot logo](logo.png)
+![TradeBot logo](docs/assets/logo.png)
 
 ## Documentation
 
-Our docs available on [GiHub Pages](https://elkopass.github.io/BITA/).
+Our docs available on [GitHub Pages](https://elkopass.github.io/BITA/).
 
 ## Installation
 
