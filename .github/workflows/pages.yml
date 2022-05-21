@@ -2,6 +2,7 @@ name: pages
 on:
   push:
     branches:
+      - main
       - dev
 
 jobs:
