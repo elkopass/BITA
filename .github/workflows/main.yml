@@ -1,6 +1,11 @@
-name: CI-CD
+name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    paths:
+      - '.github/**'
+      - 'cmd/**'
+      - 'internal/**'
 
 jobs:
   lint:
@@ -15,7 +20,7 @@ jobs:
         with:
           version: v1.29
 
-  build:
+  build-trade-bot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -23,3 +28,12 @@ jobs:
         with:
           go-version: 1.16
       - run: go build -a -o trade-bot ./cmd/trade-bot
+      
+  build-trade-utils:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.16
+      - run: go build -a -o trade-utils ./cmd/trade-utils
