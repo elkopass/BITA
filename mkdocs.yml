@@ -6,7 +6,8 @@ repo_name: 'elkopass/BITA.git'
 repo_url: 'https://github.com/elkopass/BITA.git'
 nav:
   - 'Главная': 'index.md'
-  - 'Онбординг': 'metrics.md'
+  - 'Метрики': 'metrics.md'
+  - 'Стратегии': 'strategy.md'
 
 theme:
   name: 'readthedocs'
