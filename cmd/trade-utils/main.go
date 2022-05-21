@@ -101,8 +101,7 @@ func printLastOperations() {
 		os.Exit(1)
 	}
 
-	var totalIncome map[string]pb.MoneyValue
-	totalIncome = make(map[string]pb.MoneyValue)
+	totalIncome := make(map[string]pb.MoneyValue)
 
 	fmt.Println("Executed orders (last 24 hours):")
 	for _, o := range operations {
