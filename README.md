@@ -6,6 +6,10 @@ Trading **B**ot based on [**I**nvest **T**inkoff **A**PI](https://github.com/Tin
 
 ![TradeBot logo](logo.png)
 
+## Documentation
+
+Click [>> here <<](https://elkopass.github.io/BITA/) to check latest project docs.
+
 ## Installation
 
 Clone this repository first, and we are ready to go.
