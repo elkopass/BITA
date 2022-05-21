@@ -562,6 +562,13 @@ func (tw *TradeWorker) checkNeedForCancel() {
 // handleCancellation unsets orderID.
 func (tw *TradeWorker) handleCancellation() {
 	metrics.OrdersCancelled.WithLabelValues(loggy.GetBotID(), tw.Figi).Inc()
+	if tw.sellFlag {
+		metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
+			pb.OrderDirection_ORDER_DIRECTION_SELL.String()).Dec()
+	} else {
+		metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), tw.Figi,
+			pb.OrderDirection_ORDER_DIRECTION_BUY.String()).Dec()
+	}
 
 	tw.logger.With("order_id", tw.orderID).Warn("order is cancelled")
 	tw.orderPlacedTime = nil
