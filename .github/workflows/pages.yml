@@ -2,7 +2,6 @@ name: pages
 on:
   push:
     branches:
-      - main
       - dev
 
 jobs:
@@ -16,9 +15,6 @@ jobs:
       - name: Deploy docs
         # Or use mhausenblas/mkdocs-deploy-gh-pages@nomaterial to build without the mkdocs-material theme
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFIG_FILE: mkdocs.yml
