@@ -10,7 +10,7 @@ var (
 	BotInfo = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "tradebot_info",
 		Help: "Brief information about running bot",
-	}, []string{"bot_id", "sdk_version", "selected_strategy", "workers"})
+	}, []string{"bot_id", "sdk_version", "selected_strategy", "figi_amount"})
 
 	// ApiRequests counts total requests to Tinkoff Invest API.
 	ApiRequests = prometheus.NewCounterVec(prometheus.CounterOpts{
