@@ -3,9 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/elkopass/BITA/internal/config"
 	pb "github.com/elkopass/BITA/internal/proto"
 	"github.com/elkopass/BITA/internal/sdk"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"os"
+	"time"
 )
 
 func main() {
@@ -14,7 +17,7 @@ func main() {
 	flag.Parse()
 
 	if len(mode) == 0 {
-		fmt.Println("Usage: trade-utils -mode [accounts|figi]")
+		fmt.Println("Usage: trade-utils -mode [accounts|figi|operations]")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -24,12 +27,30 @@ func main() {
 		printAvailableAccounts()
 	case "figi":
 		printAvailableFigiList()
+	case "operations":
+		printLastOperations()
 	default:
 		fmt.Printf("unknown mode '%s'; possible values: accounts, figi", mode)
 		os.Exit(1)
 	}
 }
 
+// printAvailableAccounts gets accounts from sdk.UsersService.GetAccounts.
+func printAvailableAccounts() {
+	services := sdk.NewServicePool()
+	accounts, err := services.UsersService.GetAccounts()
+	if err != nil {
+		fmt.Printf("error getting accounts: %v", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Available accounts:")
+	for _, acc := range accounts {
+		fmt.Printf("[%s] %s (%s, %s)\n", acc.Id, acc.Name, acc.Status, acc.AccessLevel)
+	}
+}
+
+// printAvailableFigiList gets shares and etfs with normal trading status.
 func printAvailableFigiList() {
 	services := sdk.NewServicePool()
 	shares, err := services.InstrumentsService.Shares(pb.InstrumentStatus_INSTRUMENT_STATUS_ALL)
@@ -65,16 +86,50 @@ func printAvailableFigiList() {
 	}
 }
 
-func printAvailableAccounts() {
+// printLastOperations gets operations from sdk.OperationsService.GetOperations.
+func printLastOperations() {
 	services := sdk.NewServicePool()
-	accounts, err := services.UsersService.GetAccounts()
+	operations, err := services.OperationsService.GetOperations(
+		config.TradeBotConfig().AccountID,
+		timestamppb.New(time.Now().Add(-24*time.Hour)),
+		timestamppb.Now(),
+		pb.OperationState_OPERATION_STATE_EXECUTED,
+		"",
+	)
 	if err != nil {
-		fmt.Printf("error getting accounts: %v", err)
+		fmt.Printf("error getting operations: %v", err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Available accounts:")
-	for _, acc := range accounts {
-		fmt.Printf("[%s] %s (%s, %s)\n", acc.Id, acc.Name, acc.Status, acc.AccessLevel)
+	var totalIncome map[string]pb.MoneyValue
+	totalIncome = make(map[string]pb.MoneyValue)
+
+	fmt.Println("Executed orders (last 24 hours):")
+	for _, o := range operations {
+		mt := totalIncome[o.Currency]
+
+		switch o.OperationType {
+		case pb.OperationType_OPERATION_TYPE_SELL:
+			mt.Units += o.Price.Units
+			mt.Nano += o.Price.Nano
+		case pb.OperationType_OPERATION_TYPE_BUY:
+			mt.Units -= o.Price.Units
+			mt.Nano -= o.Price.Nano
+		case pb.OperationType_OPERATION_TYPE_BROKER_FEE:
+			mt.Units -= o.Price.Units
+			mt.Nano -= o.Price.Nano
+		default:
+			fmt.Printf("%s is not supported!\n", o.OperationType.String())
+		}
+		totalIncome[o.Currency] = mt
+
+		fmt.Printf("[%s] %s: %d.%d, %s (%s)\n",
+			o.Figi, o.OperationType.String(), o.Price.Units, o.Price.Nano, o.Currency, o.Date.AsTime())
+	}
+
+	fmt.Println()
+	fmt.Printf("total income:\n")
+	for currency, mt := range totalIncome {
+		fmt.Printf("%d.%d %s\n", mt.Units, mt.Nano, currency)
 	}
 }
