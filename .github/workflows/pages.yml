@@ -1,8 +1,11 @@
 name: mkdocs
+
 on:
   push:
-    branches:
-      - dev
+    paths:
+      - '.github/**'
+      - 'docs/**'
+      - 'mkdocs.yml'
 
 jobs:
   build:
