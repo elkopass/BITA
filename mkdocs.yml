@@ -1,0 +1,12 @@
+site_name: Test docs
+site_description: 'A docs test'
+site_author: 'Timofey Veretnov'
+docs_dir: docs/
+repo_name: 'elkopass/BITA.git'
+repo_url: 'https://github.com/elkopass/BITA.git'
+nav:
+  - 'Главная': 'index.md'
+  - 'Онбординг': 'metrics.md'
+
+theme:
+  name: 'readthedocs'
