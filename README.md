@@ -8,7 +8,7 @@ Trading **B**ot based on [**I**nvest **T**inkoff **A**PI](https://github.com/Tin
 
 ## Documentation
 
-Click [>> here <<](https://elkopass.github.io/BITA/) to check latest project docs.
+Our docs available on [GiHub Pages](https://elkopass.github.io/BITA/).
 
 ## Installation
 
