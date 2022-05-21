@@ -9,6 +9,7 @@ import (
 	"github.com/elkopass/BITA/internal/metrics"
 	pb "github.com/elkopass/BITA/internal/proto"
 	"github.com/elkopass/BITA/internal/sdk"
+	"github.com/elkopass/BITA/internal/trade/common"
 	tradeutil "github.com/elkopass/BITA/internal/trade/util"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -331,25 +332,7 @@ func (tb *TradeBot) checkPortfolio() {
 	}
 
 	tb.logger.Info("positions: ", tradeutil.GetFormattedPositions(portfolio.Positions))
-	for _, p := range portfolio.Positions {
-		if p.CurrentPrice != nil {
-			metrics.PortfolioPositionCurrentPrice.WithLabelValues(tb.accountID, p.Figi).Set(tradeutil.MoneyValueToFloat(*p.CurrentPrice))
-		}
-		if p.ExpectedYield != nil {
-			metrics.PortfolioPositionExpectedYield.WithLabelValues(tb.accountID, p.Figi).Set(tradeutil.QuotationToFloat(*p.ExpectedYield))
-		}
-	}
-
-	metrics.PortfolioInstrumentsAmount.WithLabelValues(tb.accountID, "bonds",
-		portfolio.TotalAmountBonds.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountBonds))
-	metrics.PortfolioInstrumentsAmount.WithLabelValues(tb.accountID, "currencies",
-		portfolio.TotalAmountCurrencies.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountCurrencies))
-	metrics.PortfolioInstrumentsAmount.WithLabelValues(tb.accountID, "etfs",
-		portfolio.TotalAmountEtf.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountEtf))
-	metrics.PortfolioInstrumentsAmount.WithLabelValues(tb.accountID, "futures",
-		portfolio.TotalAmountFutures.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountFutures))
-	metrics.PortfolioInstrumentsAmount.WithLabelValues(tb.accountID, "shares",
-		portfolio.TotalAmountShares.Currency).Set(tradeutil.MoneyValueToFloat(*portfolio.TotalAmountShares))
+	common.SetPortfolioMetrics(*portfolio, tb.accountID)
 
 	if portfolio.ExpectedYield != nil {
 		tb.logger.Infof("expected yield: %d.%d", portfolio.ExpectedYield.Units, portfolio.ExpectedYield.Nano)
