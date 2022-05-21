@@ -3,7 +3,9 @@ name: mkdocs
 on:
   push:
     paths:
+      - '.github/**'
       - 'docs/**'
+      - 'mkdocs.yml'
 
 jobs:
   build:
