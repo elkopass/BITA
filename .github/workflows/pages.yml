@@ -1,8 +1,9 @@
 name: mkdocs
+
 on:
   push:
-    branches:
-      - dev
+    paths:
+      - 'docs/**'
 
 jobs:
   build:
