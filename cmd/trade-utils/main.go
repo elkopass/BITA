@@ -21,7 +21,6 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-
 	switch mode {
 	case "accounts":
 		printAvailableAccounts()
@@ -46,8 +45,56 @@ func printAvailableAccounts() {
 
 	fmt.Println("Available accounts:")
 	for _, acc := range accounts {
+
 		fmt.Printf("[%s] %s (%s, %s)\n", acc.Id, acc.Name, acc.Status, acc.AccessLevel)
+		positions, err := services.OperationsService.GetPositions(acc.Id)
+		if err != nil {
+			fmt.Printf("not enough rights to get portfolio: %v \n", err)
+		} else {
+			fmt.Printf("Funds in the account:\n")
+			for _, mon := range positions.Money {
+				fmt.Printf("%s: %d\n", mon.Currency, mon.Units)
+			}
+			portfolio, err := services.OperationsService.GetPortfolio(acc.Id)
+			if err != nil {
+				fmt.Printf("not enough rights to get portfolio: %v \n", err)
+			} else {
+				fmt.Printf("Available tools:\n")
+				for _, pos := range portfolio.Positions {
+					volume, liquidity, err := getLiquidity(pos.Figi, *services)
+					if err != nil {
+						fmt.Printf("can not get tool by figi: %v \n", err)
+					}
+					fmt.Printf("InstrumentType: %s, Figi: %s\nQuantity: %s, AveragePositionPrice: %d\nLiquidity: %d, Volume: %d\n\n",
+						pos.InstrumentType, pos.Figi, pos.Quantity, pos.AveragePositionPrice.Units, liquidity, volume)
+				}
+			}
+		}
 	}
+}
+
+func getLiquidity(figi string, services sdk.ServicePool) (int64, int64, error) {
+	shortCandles, err := services.MarketDataService.GetCandles(
+		figi,
+		timestamppb.New(time.Now().Add(-time.Duration(30)*time.Hour)),
+		timestamppb.Now(),
+		pb.CandleInterval_CANDLE_INTERVAL_HOUR,
+	)
+
+	if err != nil {
+		return 0, 0, err
+	}
+
+	//Ликвидность = (Q*V)/t
+	var Q int64 = 0
+	var V int64 = 0
+
+	for _, candle := range shortCandles {
+		Q += candle.Volume
+		V = (V + (candle.Open.Units+candle.Close.Units)/2) / 2
+	}
+
+	return Q, Q * V / 3600, nil
 }
 
 // printAvailableFigiList gets shares and etfs with normal trading status.
