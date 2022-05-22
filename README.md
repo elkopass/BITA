@@ -8,7 +8,7 @@ Trading **B**ot based on [**I**nvest **T**inkoff **A**PI](https://github.com/Tin
 
 ## Documentation
 
-Our docs available on [GitHub Pages](https://elkopass.github.io/BITA/).
+Our documentation is available on [GitHub Pages](https://elkopass.github.io/BITA/).
 
 ## Installation
 
@@ -73,5 +73,5 @@ for your own installation.
 The developers are NOT RESPONSIBLE for any financial losses incurred 
 during the use of the trading bot.
 
-This project is released under the Apache License
+This project is released under the Apache License.
 See [LICENSE](https://github.com/elkopass/BITA/blob/main/LICENSE) for details.

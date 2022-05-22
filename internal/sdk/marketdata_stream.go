@@ -7,31 +7,38 @@ import (
 )
 
 type MarketDataStreamInterface interface {
-	// Bi-directional стрим предоставления биржевой информации.
-	MarketDataStream() (pb.MarketDataStreamService_MarketDataStreamClient, error)
+	// Recv listens for incoming messages and block until first one is received.
+	Recv() (*pb.MarketDataResponse, error)
+	// Send puts pb.MarketDataRequest into a stream.
+	Send(request *pb.MarketDataRequest) error
 }
 
-type MarketDataStreamService struct {
+type MarketDataStream struct {
 	client pb.MarketDataStreamServiceClient
+	stream pb.MarketDataStreamService_MarketDataStreamClient
 }
 
-func NewMarketDataStreamService() *MarketDataStreamService {
+func NewMarketDataStream() *MarketDataStream {
 	conn, err := createClientConn()
 	if err != nil {
 		loggy.GetLogger().Sugar().Fatal(err.Error())
 	}
 
 	client := pb.NewMarketDataStreamServiceClient(conn)
-	return &MarketDataStreamService{client: client}
-}
-
-func (mdss MarketDataStreamService) MarketDataStream() (pb.MarketDataStreamService_MarketDataStreamClient, error) {
 	ctx := createStreamContext()
 
-	res, err := mdss.client.MarketDataStream(ctx)
+	stream, err := client.MarketDataStream(ctx)
 	if err != nil {
-		return nil, err
+		loggy.GetLogger().Sugar().Fatal(err.Error())
 	}
 
-	return res, nil
+	return &MarketDataStream{client: client, stream: stream}
+}
+
+func (mds MarketDataStream) Recv() (*pb.MarketDataResponse, error) {
+	return mds.stream.Recv()
+}
+
+func (mds MarketDataStream) Send(request *pb.MarketDataRequest) error {
+	return mds.stream.Send(request)
 }

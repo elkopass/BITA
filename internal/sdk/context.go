@@ -9,6 +9,7 @@ import (
 	grpcMetadata "google.golang.org/grpc/metadata"
 )
 
+// createRequestContext returns context for API calls with timeout and auth headers attached.
 func createRequestContext() (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), config.DefaultRequestTimeout)
 
@@ -20,6 +21,7 @@ func createRequestContext() (context.Context, context.CancelFunc) {
 	return ctx, cancel
 }
 
+// createRequestContext returns context for streams with auth headers attached.
 func createStreamContext() context.Context {
 	ctx := context.TODO()
 

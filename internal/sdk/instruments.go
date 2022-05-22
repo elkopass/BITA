@@ -9,45 +9,45 @@ import (
 )
 
 type InstrumentsInterface interface {
-	// Метод получения расписания торгов торговых площадок.
+	// The method of obtaining the trading schedule of trading platforms.
 	TradingSchedules(exchange string, from, to *timestamp.Timestamp) ([]*pb.TradingSchedule, error)
-	// Метод получения облигации по её идентификатору.
+	// The method of obtaining a bond by its identifier.
 	BondBy(filters pb.InstrumentRequest) (*pb.Bond, error)
-	// Метод получения списка облигаций.
+	// Method of obtaining a list of bonds.
 	Bonds(status pb.InstrumentStatus) ([]*pb.Bond, error)
-	// Метод получения графика выплат купонов по облигации
+	// Method of obtaining a coupon payment schedule for a bond.
 	GetBondCoupons(figi string, from, to *timestamp.Timestamp) ([]*pb.Coupon, error)
-	// Метод получения валюты по её идентификатору.
+	// The method of obtaining a currency by its identifier.
 	CurrencyBy(filters pb.InstrumentRequest) (*pb.Currency, error)
-	// Метод получения списка валют.
+	// Method for getting a list of currencies.
 	Currencies(status pb.InstrumentStatus) ([]*pb.Currency, error)
-	// Метод получения инвестиционного фонда по его идентификатору.
+	// The method of obtaining an investment fund by its identifier.
 	EtfBy(filters pb.InstrumentRequest) (*pb.Etf, error)
-	// Метод получения списка инвестиционных фондов.
+	// Method of obtaining a list of investment funds.
 	Etfs(status pb.InstrumentStatus) ([]*pb.Etf, error)
-	// Метод получения фьючерса по его идентификатору.
+	// The method of obtaining futures by its identifier.
 	FutureBy(filters pb.InstrumentRequest) (*pb.Future, error)
-	// Метод получения списка фьючерсов.
+	// Method for getting a list of futures.
 	Futures(status pb.InstrumentStatus) ([]*pb.Future, error)
-	// Метод получения акции по её идентификатору.
+	// The method of obtaining a stock by its identifier.
 	ShareBy(filters pb.InstrumentRequest) (*pb.Share, error)
-	// Метод получения списка акций.
+	// Method of getting a list of shares.
 	Shares(status pb.InstrumentStatus) ([]*pb.Share, error)
-	// Метод получения накопленного купонного дохода по облигации.
+	// The method of obtaining the accumulated coupon income on the bond.
 	GetAccruedInterests(figi string, from, to *timestamp.Timestamp) ([]*pb.AccruedInterest, error)
-	// Метод получения размера гарантийного обеспечения по фьючерсам.
+	// The method of obtaining the amount of the guarantee for futures.
 	GetFuturesMargin(figi string) (*pb.GetFuturesMarginResponse, error)
-	// Метод получения основной информации об инструменте.
+	// The method of obtaining basic information about the tool.
 	GetInstrumentBy(filters pb.InstrumentRequest) (*pb.Instrument, error)
-	// Метод для получения событий выплаты дивидендов по инструменту.
+	// A method for obtaining dividend payment events for an instrument.
 	GetDividends(figi string, from, to *timestamp.Timestamp) ([]*pb.Dividend, error)
-	// Метод получения актива по его идентификатору.
+	// The method of obtaining an asset by its identifier.
 	GetAssetBy(assetID string) (*pb.AssetFull, error)
-	// Метод получения списка активов.
+	// Method for getting a list of assets.
 	GetAssets() ([]*pb.Asset, error)
-	// Метод получения избранных инструментов.
+	// The method of getting the favourite instruments.
 	GetFavorites() ([]*pb.FavoriteInstrument, error)
-	// Метод редактирования избранных инструментов.
+	// The method of editing the selected instruments.
 	EditFavorites(newFavourites *pb.EditFavoritesRequest) ([]*pb.FavoriteInstrument, error)
 }
 

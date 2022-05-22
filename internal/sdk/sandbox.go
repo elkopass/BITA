@@ -9,27 +9,27 @@ import (
 )
 
 type SandboxInterface interface {
-	// Метод регистрации счёта в песочнице.
+	// The method of registering an account in the sandbox.
 	OpenSandboxAccount() (string, error)
-	// Метод получения счетов в песочнице.
+	// The method of getting accounts in the sandbox.
 	GetSandboxAccounts() ([]*pb.Account, error)
-	// Метод закрытия счёта в песочнице.
+	// The method of closing an account in the sandbox.
 	CloseSandboxAccount(accountID string) error
-	// Метод выставления торгового поручения в песочнице.
+	// The method of placing a trade order in the sandbox.
 	PostSandboxOrder(order *pb.PostOrderRequest) (*pb.PostOrderResponse, error)
-	// Метод получения списка активных заявок по счёту в песочнице.
+	// Method for getting a list of active applications for an account in the sandbox.
 	GetSandboxOrders(accountID string) ([]*pb.OrderState, error)
-	// Метод отмены торгового поручения в песочнице.
+	// Method for getting a list of active orders for an account in the sandbox.
 	CancelSandboxOrder(accountID string, orderID string) (*timestamp.Timestamp, error)
-	// Метод получения статуса заявки в песочнице.
+	// The method of obtaining the order status in the sandbox.
 	GetSandboxOrderState(accountID string, orderID string) (*pb.OrderState, error)
-	// Метод получения позиций по виртуальному счёту песочницы.
+	// The method of obtaining positions on the virtual sandbox account.
 	GetSandboxPositions(accountID string) (*pb.PositionsResponse, error)
-	// Метод получения операций в песочнице по номеру счёта.
+	// The method of receiving operations in the sandbox by account number.
 	GetSandboxOperations(filter *pb.OperationsRequest) ([]*pb.Operation, error)
-	// Метод получения портфолио в песочнице.
+	// The method of getting a portfolio in the sandbox.
 	GetSandboxPortfolio(accountID string) (*pb.PortfolioResponse, error)
-	// Метод пополнения счёта в песочнице.
+	// The method of depositing funds in the sandbox.
 	SandboxPayIn(accountID string, amount *pb.MoneyValue) (*pb.MoneyValue, error)
 }
 

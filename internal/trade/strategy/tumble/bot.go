@@ -23,7 +23,7 @@ type TradeBot struct {
 	config    TradeConfig
 	logger    *zap.SugaredLogger
 
-	tradesStream pb.OrdersStreamService_TradesStreamClient
+	tradesStream sdk.OrdersStream
 }
 
 type Order struct {
@@ -53,12 +53,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 		return errors.New("strategy is not available in sandbox, " +
 			"see https://github.com/Tinkoff/investAPI/issues/176")
 	} else {
-		oss := sdk.NewOrdersStreamService()
-		tradesStream, err := oss.TradesStream(&pb.TradesStreamRequest{Accounts: []string{tb.accountID}})
-		if err != nil {
-			tb.logger.Fatal(err)
-		}
-		tb.tradesStream = tradesStream
+		tb.tradesStream = *sdk.NewOrdersStream(&pb.TradesStreamRequest{Accounts: []string{tb.accountID}})
 	}
 
 	figi := config.TradeBotConfig().Figi
@@ -68,11 +63,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 		instruments = append(instruments, &pb.OrderBookInstrument{Figi: f, Depth: int32(tb.config.OrderBookDepth)})
 	}
 
-	mdss := sdk.NewMarketDataStreamService()
-	marketDataStream, err := mdss.MarketDataStream()
-	if err != nil {
-		tb.logger.Fatal(err)
-	}
+	mds := sdk.NewMarketDataStream()
 
 	request := pb.SubscribeOrderBookRequest{
 		Instruments:        instruments,
@@ -80,7 +71,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	}
 	payload := &pb.MarketDataRequest_SubscribeOrderBookRequest{SubscribeOrderBookRequest: &request}
 
-	err = marketDataStream.Send(&pb.MarketDataRequest{Payload: payload})
+	err = mds.Send(&pb.MarketDataRequest{Payload: payload})
 	if err != nil {
 		return err
 	}
@@ -89,7 +80,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	go tb.listenTradeStream(tradeStreamCtx)
 
 	for {
-		msg, err := marketDataStream.Recv()
+		msg, err := mds.Recv()
 		if err != nil {
 			tb.logger.Error(err)
 		}
@@ -123,6 +114,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	}
 }
 
+// setAccountID gets account ID from config or creates a new one in sandbox.
 func (tb *TradeBot) setAccountID() error {
 	accountID := config.TradeBotConfig().AccountID
 	if config.TradeBotConfig().IsSandbox {
@@ -149,6 +141,7 @@ func (tb *TradeBot) setAccountID() error {
 	return nil
 }
 
+// listenTradeStream receives fulfilled orders from stream.
 func (tb *TradeBot) listenTradeStream(ctx context.Context) {
 	for {
 		msg, err := tb.tradesStream.Recv()
@@ -161,6 +154,18 @@ func (tb *TradeBot) listenTradeStream(ctx context.Context) {
 			tb.logger.With("order_id", orderTrades.OrderId).
 				With("figi", orderTrades.Figi).
 				Info("order is fulfilled")
+
+			metrics.OrdersFulfilled.WithLabelValues(loggy.GetBotID(),
+				orderTrades.Figi, orderTrades.Direction.String()).Inc()
+			metrics.OrdersPlaced.WithLabelValues(loggy.GetBotID(), orderTrades.Figi,
+				orderTrades.Direction.String()).Dec()
+
+			switch orderTrades.Direction {
+			case pb.OrderDirection_ORDER_DIRECTION_BUY:
+				metrics.InstrumentsPurchased.WithLabelValues(loggy.GetBotID(), orderTrades.Figi).Inc()
+			case pb.OrderDirection_ORDER_DIRECTION_SELL:
+				metrics.InstrumentsPurchased.WithLabelValues(loggy.GetBotID(), orderTrades.Figi).Dec()
+			}
 
 			delete(tb.orders, orderTrades.Figi)
 			go tb.checkPortfolio()
@@ -176,6 +181,7 @@ func (tb *TradeBot) listenTradeStream(ctx context.Context) {
 	}
 }
 
+// makeDecision checks pb.OrderBook volumes with the goal to create buy/sell order.
 func (tb *TradeBot) makeDecision(orderBook *pb.OrderBook) {
 	var asksQuantity float64
 	for _, ask := range orderBook.Asks {
@@ -205,6 +211,7 @@ func (tb *TradeBot) makeDecision(orderBook *pb.OrderBook) {
 	}
 }
 
+// tryToBuy tries to create buy order with price calculated on pb.OrderBook.
 func (tb *TradeBot) tryToBuy(orderBook *pb.OrderBook) {
 	fairPrice := orderBook.Bids[tb.config.OrderBookFairBidDepth].Price
 	fairMarketPrice := tradeutil.QuotationToFloat(*fairPrice)
@@ -260,6 +267,7 @@ func (tb *TradeBot) tryToBuy(orderBook *pb.OrderBook) {
 	tb.orders[orderBook.Figi] = order
 }
 
+// tryToSell tries to create sell order with price calculated on pb.OrderBook.
 func (tb *TradeBot) tryToSell(orderBook *pb.OrderBook) {
 	fairPrice := orderBook.Asks[5].Price
 	fairMarketPrice := tradeutil.QuotationToFloat(*fairPrice)

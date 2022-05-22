@@ -1,8 +1,9 @@
 // Package sdk represents internal proto-wrapper for Tinkoff Invest API.
 package sdk
 
-const Version = "0.1.6"
+const Version = "0.2.1"
 
+// ServicePool is a ready-to-use scope for all available non-stream services.
 type ServicePool struct {
 	InstrumentsService InstrumentsService
 	MarketDataService  MarketDataService

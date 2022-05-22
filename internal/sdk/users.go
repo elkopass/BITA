@@ -8,13 +8,13 @@ import (
 )
 
 type UsersServiceClient interface {
-	// Метод получения счетов пользователя.
+	// The method of receiving user accounts.
 	GetAccounts() ([]*pb.Account, error)
-	// Расчёт маржинальных показателей по счёту.
+	// Calculation of margin indicators on the account.
 	GetMarginAttributes(accountID string) (*pb.GetMarginAttributesResponse, error)
-	// Запрос тарифа пользователя.
+	// Request for the user's tariff.
 	GetUserTariff() (*pb.GetUserTariffResponse, error)
-	// Метод получения информации о пользователе.
+	// The method of obtaining information about the user.
 	GetInfo() (*pb.GetInfoResponse, error)
 }
 

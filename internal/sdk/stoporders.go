@@ -9,11 +9,11 @@ import (
 )
 
 type StopOrdersInterface interface {
-	// Метод выставления стоп-заявки.
+	// The method of placing a stop order.
 	PostStopOrder(stopOrder *pb.PostStopOrderRequest) (string, error)
-	// Метод получения списка активных стоп заявок по счёту.
+	// Method for getting a list of active stop orders on the account.
 	GetStopOrders(accountID string) ([]*pb.StopOrder, error)
-	// Метод отмены стоп-заявки.
+	// The method of canceling the stop order.
 	CancelStopOrder(accountID string, stopOrderID string) (*timestamp.Timestamp, error)
 }
 

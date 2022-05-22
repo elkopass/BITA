@@ -9,13 +9,13 @@ import (
 )
 
 type OperationsInterface interface {
-	// Метод получения списка операций по счёту.
+	// Method for getting a list of account transactions.
 	GetOperations(accountID string, from, to *timestamp.Timestamp, state pb.OperationState, figi string) ([]*pb.Operation, error)
-	// Метод получения портфеля по счёту.
+	// The method of obtaining a portfolio by account.
 	GetPortfolio(accountID string) (*pb.PortfolioResponse, error)
-	// Метод получения списка позиций по счёту.
+	// Method for getting a list of account positions.
 	GetPositions(accountID string) (*pb.PositionsResponse, error)
-	// Метод получения доступного остатка для вывода средств.
+	// The method of obtaining the available balance for withdrawal of funds.
 	GetWithdrawLimits(accountID string) (*pb.WithdrawLimitsResponse, error)
 }
 
