@@ -97,7 +97,7 @@
 [doc.go](https://github.com/elkopass/BITA/blob/main/internal/trade/strategy/tumble/doc.go).
 
 **Не доступна в песочнице** (см. 
-[issue](https://github.com/Tinkoff/investAPI/issues/176).)
+[issue](https://github.com/Tinkoff/investAPI/issues/176))
 
 ### Конфигурация
 
