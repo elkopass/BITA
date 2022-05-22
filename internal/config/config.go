@@ -18,9 +18,9 @@ const (
 )
 
 type tradeBotConfig struct {
-	Figi []string `required:"true"`
+	Figi []string `split_words:"true"`
 
-	IsSandbox  bool   `required:"true" split_words:"true"`
+	IsSandbox  bool   `default:"true" split_words:"true"`
 	Token      string `required:"true"`
 	AccountID  string `split_words:"true"` // required in non-sandbox mode
 	Env        string `default:"UNSPECIFIED"`

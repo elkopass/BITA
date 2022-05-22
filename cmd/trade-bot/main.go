@@ -44,7 +44,7 @@ func main() {
 		service := sdk.NewUsersService()
 		_, err := service.GetInfo()
 		if err != nil {
-			log.Fatalf("your API token does not exist")
+			log.Fatalf("your API token is invalid or does not exist")
 		}
 
 		log.Warnf("[DANGER] running without sandbox with %s strategy and %s account ID, "+
@@ -54,6 +54,9 @@ func main() {
 	if len(cnf.Figi) == 2 && cnf.Figi[0] == "<figi1>" {
 		log.Fatalf("please specify some figi's to trade in TRADEBOT_FIGI env variable; " +
 			"if you need some, compile and run '$ trade-utils -mode figi' to get them")
+	}
+	if len(cnf.Figi) == 0 {
+		log.Fatalf("you need to specify at least one FIGI for trading in TRADEBOT_FIGI env variable")
 	}
 
 	// init trade bot
