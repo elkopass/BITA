@@ -19,6 +19,6 @@
 
 ## Лицензия
 
-Проект распространяется под лицензией MIT.
+Проект распространяется под лицензией APACHE 2.0 .
 
 Детали в [LICENSE](https://github.com/elkopass/BITA/blob/main/LICENSE).
