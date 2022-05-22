@@ -6,12 +6,17 @@ import (
 	"github.com/elkopass/BITA/internal/config"
 	pb "github.com/elkopass/BITA/internal/proto"
 	"github.com/elkopass/BITA/internal/sdk"
+	tradeutil "github.com/elkopass/BITA/internal/trade/util"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"os"
 	"time"
 )
 
+var services *sdk.ServicePool
+
 func main() {
+	services = sdk.NewServicePool()
+
 	var mode string
 	flag.StringVar(&mode, "mode", "", "running module")
 	flag.Parse()
@@ -36,7 +41,6 @@ func main() {
 
 // printAvailableAccounts gets accounts from sdk.UsersService.GetAccounts.
 func printAvailableAccounts() {
-	services := sdk.NewServicePool()
 	accounts, err := services.UsersService.GetAccounts()
 	if err != nil {
 		fmt.Printf("error getting accounts: %v", err)
@@ -45,56 +49,59 @@ func printAvailableAccounts() {
 
 	fmt.Println("Available accounts:")
 	for _, acc := range accounts {
-
 		fmt.Printf("[%s] %s (%s, %s)\n", acc.Id, acc.Name, acc.Status, acc.AccessLevel)
+
 		positions, err := services.OperationsService.GetPositions(acc.Id)
 		if err != nil {
 			fmt.Printf("not enough rights to get portfolio: %v \n", err)
 		} else {
 			fmt.Printf("Funds in the account:\n")
 			for _, mon := range positions.Money {
-				fmt.Printf("%s: %d\n", mon.Currency, mon.Units)
+				fmt.Printf("%s: %d.%d\n", mon.Currency, mon.Units, mon.Nano)
 			}
 			portfolio, err := services.OperationsService.GetPortfolio(acc.Id)
 			if err != nil {
 				fmt.Printf("not enough rights to get portfolio: %v \n", err)
 			} else {
-				fmt.Printf("Available tools:\n")
-				for _, pos := range portfolio.Positions {
-					volume, liquidity, err := getLiquidity(pos.Figi, *services)
-					if err != nil {
-						fmt.Printf("can not get tool by figi: %v \n", err)
-					}
-					fmt.Printf("InstrumentType: %s, Figi: %s\nQuantity: %s, AveragePositionPrice: %d\nLiquidity: %d, Volume: %d\n\n",
-						pos.InstrumentType, pos.Figi, pos.Quantity, pos.AveragePositionPrice.Units, liquidity, volume)
-				}
+				printPortfolio(*portfolio)
 			}
 		}
 	}
 }
 
-func getLiquidity(figi string, services sdk.ServicePool) (int64, int64, error) {
-	shortCandles, err := services.MarketDataService.GetCandles(
-		figi,
-		timestamppb.New(time.Now().Add(-time.Duration(30)*time.Hour)),
-		timestamppb.Now(),
-		pb.CandleInterval_CANDLE_INTERVAL_HOUR,
-	)
+// printPortfolio gets instruments information from portfolio positions.
+func printPortfolio(portfolio pb.PortfolioResponse) {
+	fmt.Printf("Available tools:\n")
+	for _, pos := range portfolio.Positions {
+		instrument, err := services.InstrumentsService.GetInstrumentBy(
+			pb.InstrumentRequest{Id: pos.Figi, IdType: pb.InstrumentIdType_INSTRUMENT_ID_TYPE_FIGI})
+		if err != nil {
+			fmt.Printf("error getting asset %s: %v\n", pos.Figi, err)
+			continue
+		}
 
-	if err != nil {
-		return 0, 0, err
+		candles, err := services.MarketDataService.GetCandles(
+			pos.Figi,
+			timestamppb.New(time.Now().Add(-24*7*time.Hour)),
+			timestamppb.Now(),
+			pb.CandleInterval_CANDLE_INTERVAL_HOUR,
+		)
+		if err != nil {
+			fmt.Printf("error getting candles for %s: %v\n", pos.Figi, err)
+			continue
+		}
+
+		volume, liquidity := tradeutil.GetVolumeAndLiquidity(candles)
+		averagePrice := tradeutil.MoneyValueToFloat(*pos.AveragePositionPrice)
+		currentPrice := tradeutil.MoneyValueToFloat(*pos.CurrentPrice)
+		currency := pos.AveragePositionPrice.Currency
+		yield := (currentPrice / averagePrice - 1) * 100
+
+		fmt.Printf("[%s] %s (%s, %s): %d quantity, %.2f %s current price (average is %.2f %s), %.2f%% yield, %d volume, %d liquidity\n",
+			pos.Figi, instrument.Name, instrument.Ticker, pos.InstrumentType, pos.Quantity.Units,
+			currentPrice, currency, averagePrice, currency,
+			yield, volume, liquidity)
 	}
-
-	//Ликвидность = (Q*V)/t
-	var Q int64 = 0
-	var V int64 = 0
-
-	for _, candle := range shortCandles {
-		Q += candle.Volume
-		V = (V + (candle.Open.Units+candle.Close.Units)/2) / 2
-	}
-
-	return Q, Q * V / 3600, nil
 }
 
 // printAvailableFigiList gets shares and etfs with normal trading status.
