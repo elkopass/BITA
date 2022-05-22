@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  trade_bot:
+    build:
+      dockerfile: cmd/trade-bot/Dockerfile
+      context: .
+    container_name: trade_bot
+    env_file:
+      - cmd/trade-bot/.env
+    ports:
+      - 8080:8080  # to access the metrics

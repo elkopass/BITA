@@ -1,0 +1,14 @@
+.idea/
+.github/
+
+Dockerfile
+docker-compose.yml
+
+**/*.env
+**/*.md
+
+**/.git
+**/.gitkeep
+
+.gitignore
+.gitattributes

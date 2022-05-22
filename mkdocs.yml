@@ -1,0 +1,23 @@
+site_name: BITA
+site_description: 'Trading bot based on Tinkoff Invest API'
+site_author: 'Timofey Veretnov'
+
+repo_name: 'elkopass/BITA.git'
+repo_url: 'https://github.com/elkopass/BITA.git'
+
+docs_dir: docs/
+edit_uri: edit/main/docs/
+
+nav:
+  - 'Главная': 'index.md'
+  - 'Идеология': 'ideology.md'
+  - 'Инсталляция': 'installation.md'
+  - 'Конфигурация': 'configuration.md'
+  - 'SDK': 'sdk.md'
+  - 'Торговые стратегии': 'strategies.md'
+  - 'Визуализация': 'visualization.md'
+  - 'Дополнительно': 'extra.md'
+  - 'FAQ': 'faq.md'
+
+theme:
+  name: 'readthedocs'
