@@ -71,7 +71,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1653060436151,
+  "iteration": 1653206003003,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -117,7 +117,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "max(tradebot_info) by (bot_id, sdk_version, selected_strategy, workers)",
+          "expr": "max(tradebot_info) by (bot_id, sdk_version, selected_strategy, figi_amount)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -759,7 +759,7 @@
       },
       "gridPos": {
         "h": 9,
-        "w": 6,
+        "w": 24,
         "x": 0,
         "y": 36
       },
@@ -796,7 +796,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 54
+        "y": 45
       },
       "id": 8,
       "panels": [],
@@ -861,7 +861,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 55
+        "y": 46
       },
       "id": 21,
       "options": {
@@ -943,7 +943,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 55
+        "y": 46
       },
       "id": 22,
       "options": {
@@ -975,7 +975,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 65
+        "y": 56
       },
       "id": 24,
       "panels": [],
@@ -1012,7 +1012,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 66
+        "y": 57
       },
       "id": 4,
       "options": {
@@ -1144,12 +1144,12 @@
     ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "TradeBot",
   "uid": "BO_RHo_nk",
-  "version": 18
+  "version": 20
 }
