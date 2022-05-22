@@ -9,13 +9,13 @@ import (
 )
 
 type OrdersInterface interface {
-	// Метод выставления заявки.
+	// The method of submitting the order.
 	PostOrder(order *pb.PostOrderRequest) (*pb.PostOrderResponse, error)
-	// Метод отмены биржевой заявки.
+	// The method of cancellation of the trade order.
 	CancelOrder(accountID string, orderID string) (*timestamp.Timestamp, error)
-	// Метод получения статуса торгового поручения.
+	// The method of obtaining the status of a trade order.
 	GetOrderState(accountID string, orderID string) (*pb.OrderState, error)
-	// Метод получения списка активных заявок по счёту.
+	// The method of getting a list of active orders for the account.
 	GetOrders(accountID string) ([]*pb.OrderState, error)
 }
 

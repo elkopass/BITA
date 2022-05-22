@@ -9,15 +9,15 @@ import (
 )
 
 type MarketDataInterface interface {
-	// Метод запроса исторических свечей по инструменту.
+	// The method of requesting historical candlesticks by instrument.
 	GetCandles(figi string, from, to *timestamp.Timestamp, interval pb.CandleInterval) ([]*pb.HistoricCandle, error)
-	// Метод запроса последних цен по инструментам.
+	// The method of requesting the latest prices for instruments.
 	GetLastPrices(figi []string) ([]*pb.LastPrice, error)
-	// Метод получения стакана по инструменту.
+	// The method of obtaining a glass by instrument.
 	GetOrderBook(figi string, depth int) (*pb.GetOrderBookResponse, error)
-	// Метод запроса статуса торгов по инструментам.
+	// The method of requesting the status of trading on instruments.
 	GetTradingStatus(figi string) (*pb.GetTradingStatusResponse, error)
-	// Метод запроса последних обезличенных сделок по инструменту.
+	// The method of requesting the latest depersonalized transactions on the instrument.
 	GetLastTrades(figi string, from, to *timestamp.Timestamp) ([]*pb.Trade, error)
 }
 
