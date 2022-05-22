@@ -71,7 +71,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1653206003003,
+  "iteration": 1653206003006,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -796,7 +796,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 54
       },
       "id": 8,
       "panels": [],
@@ -861,7 +861,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 46
+        "y": 55
       },
       "id": 21,
       "options": {
@@ -935,7 +935,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "percent"
         },
         "overrides": []
       },
@@ -943,7 +944,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 46
+        "y": 55
       },
       "id": 22,
       "options": {
@@ -961,7 +962,7 @@
           "exemplar": true,
           "expr": "tradebot_portfolio_expected_yield_overall{account_id=~\"$account_id\"} != 0",
           "interval": "",
-          "legendFormat": "{{account_id}}",
+          "legendFormat": "Account {{account_id}}",
           "refId": "A"
         }
       ],
@@ -975,7 +976,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 65
       },
       "id": 24,
       "panels": [],
@@ -1012,7 +1013,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 66
       },
       "id": 4,
       "options": {
@@ -1151,5 +1152,5 @@
   "timezone": "",
   "title": "TradeBot",
   "uid": "BO_RHo_nk",
-  "version": 20
+  "version": 21
 }
