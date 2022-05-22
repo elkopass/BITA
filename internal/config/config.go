@@ -12,9 +12,6 @@ const (
 	AppName = "elkopass.BITA"
 
 	DefaultRequestTimeout = 30 * time.Second
-
-	CircuitBreakerMaxFailures = 5
-	CircuitBreakerRefreshTime = 60 * time.Minute
 )
 
 type tradeBotConfig struct {
@@ -35,6 +32,11 @@ type metricsConfig struct {
 	Endpoint string `default:"/metrics" split_words:"true"`
 }
 
+type circuitBreakerConfig struct {
+	MaxFailures        int `default:"5" split_words:"true"`
+	RefreshTimeMinutes int `default:"60" split_words:"true"`
+}
+
 var (
 	// TradeBotConfig returns relevant global configuration.
 	TradeBotConfig = func() tradeBotConfig {
@@ -47,10 +49,21 @@ var (
 		return config
 	}
 
-	// TradeBotConfig returns config for Prometheus exporter.
+	// MetricsConfig returns config for Prometheus exporter.
 	MetricsConfig = func() metricsConfig {
 		var config metricsConfig
 		err := envconfig.Process("metrics", &config)
+		if err != nil {
+			loggy.GetLogger().Sugar().Fatalf("failed to process config: %v", err)
+		}
+
+		return config
+	}
+
+	// CircuitBreakerConfig returns config for breaker.CircuitBreaker.
+	CircuitBreakerConfig = func() circuitBreakerConfig {
+		var config circuitBreakerConfig
+		err := envconfig.Process("breaker", &config)
 		if err != nil {
 			loggy.GetLogger().Sugar().Fatalf("failed to process config: %v", err)
 		}
