@@ -73,5 +73,5 @@ for your own installation.
 The developers are NOT RESPONSIBLE for any financial losses incurred 
 during the use of the trading bot.
 
-This project is released under the MIT license. 
+This project is released under the Apache License
 See [LICENSE](https://github.com/elkopass/BITA/blob/main/LICENSE) for details.
