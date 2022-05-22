@@ -91,7 +91,7 @@ func printPortfolio(portfolio pb.PortfolioResponse) {
 			continue
 		}
 
-		volume, liquidity := tradeutil.GetVolumeAndLiquidity(candles)
+		volume, liquidity := tradeutil.CalculateVolumeAndLiquidity(candles)
 		averagePrice := tradeutil.MoneyValueToFloat(*pos.AveragePositionPrice)
 		currentPrice := tradeutil.MoneyValueToFloat(*pos.CurrentPrice)
 		currency := pos.AveragePositionPrice.Currency
