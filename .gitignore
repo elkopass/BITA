@@ -15,7 +15,8 @@
 # vendor/
 
 # Environment
-*/**/.env
+!cmd/**/.env-example
+cmd/**/.env
 
 # Project folder
 .idea/
