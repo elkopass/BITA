@@ -3,7 +3,7 @@
 Торговый бот полностью конфигурируется через переменные окружения
 с использованием библиотеки [envconfig](https://github.com/kelseyhightower/envconfig).
 
-В файлах [.env-example]((https://github.com/elkopass/BITA/blob/main/cmd/trade-bot/.env-example))
+В файлах [.env-example](https://github.com/elkopass/BITA/blob/main/cmd/trade-bot/.env-example)
 приведены шаблоны конфигов. Перед запуском trade-bot или trade-utils их 
 необходимо модифицировать, передав туда все необходимые параметры, такие как 
 токен API, ID аккаунта и т.д. 
