@@ -14,7 +14,7 @@ type TradeConfig struct {
 	TakeProfitCoef float64 `default:"1.05" split_words:"true"`
 
 	ShortWindow          int `default:"25" split_words:"true"`
-	LongWindow           int `default:"75" split_words:"true"`
+	LongWindow           int `default:"50" split_words:"true"`
 	CandlesIntervalHours int `default:"144" split_words:"true"`
 
 	WorkerSleepDurationSeconds int64 `default:"30" split_words:"true"`

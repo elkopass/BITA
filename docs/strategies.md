@@ -15,11 +15,33 @@
 заданных в файле конфигурации значений, то бот покупает ценную бумагу. Продажа
 осуществляется при превышении ценой "stop-loss" или "take-profit" трешхолда. 
 
-Подробное описание доступно в файле doc.go.
+Работает на воркерах.
+
+Подробное описание доступно в файле 
+[doc.go](https://github.com/elkopass/BITA/blob/main/internal/trade/strategy/gamble/doc.go).
 
 ### Конфигурация
 
-> TODO
+```bash
+## сколькими лотами должен торговать воркер для одного инструмента
+# GAMBLE_STRATEGY_LOTS_TO_BUY=1
+## порог убыли для выставления "stop loss" поручения
+# GAMBLE_STRATEGY_STOP_LOSS_COEF=0.97
+## порог прибыли для выставления "take profit" поручения
+# GAMBLE_STRATEGY_TAKE_PROFIT_COEF=1.02
+## минимальный коэффицент K длинного тренда для покупки
+# GAMBLE_STRATEGY_LONG_TREND_TO_TRADE=0.05
+## минимальный коэффицент K короткого тренда для покупки
+# GAMBLE_STRATEGY_SHORT_TREND_TO_TRADE=0.1
+## интервал вычисления длинного тренда в секундах
+# GAMBLE_STRATEGY_LONG_TREND_INTERVAL_SECONDS=86400
+## интервал вычисления длинного тренда в секундах
+# GAMBLE_STRATEGY_SHORT_TREND_INTERVAL_SECONDS=3600
+## временной интервал для сна воркеров в секундах
+# GAMBLE_STRATEGY_WORKER_SLEEP_DURATION_SECONDS=30
+## временной интервал для отмены выставленного поручения в секундах
+# GAMBLE_STRATEGY_SECONDS_TO_CANCEL_ORDER=3600
+```
 
 ## CRUMBLE
 
@@ -30,11 +52,32 @@
 В момент превышения длинной над короткой робот продает, в обратном случае– покупает.
 Интервал для построения индикаторов задается в конфиге.
 
-Подробное описание доступно в файле doc.go.
+Работает на воркерах.
+
+Подробное описание доступно в файле 
+[doc.go](https://github.com/elkopass/BITA/blob/main/internal/trade/strategy/crumble/doc.go).
 
 ### Конфигурация
 
-> TODO
+```bash
+## сколькими лотами должен торговать воркер для одного инструмента
+# CRUMBLE_STRATEGY_LOTS_TO_BUY=1
+## порог убыли для выставления "stop loss" поручения
+# CRUMBLE_STRATEGY_STOP_LOSS_COEF=0.95
+## порог прибыли для выставления "take profit" поручения
+# CRUMBLE_STRATEGY_TAKE_PROFIT_COEF=1.05
+## окно для вычисления короткой скользящей средней
+# CRUMBLE_STRATEGY_SHORT_WINDOW=25
+## окно для вычисления длинной скользящей средней
+# CRUMBLE_STRATEGY_LONG_WINDOW=50
+## интервал для запроса часовых свечей 
+## в диапазоне от CRUMBLE_STRATEGY_LONG_WINDOW до 168 (7 дней)
+# CRUMBLE_STRATEGY_CANDLES_INTERVAL_HOURS=144
+## временной интервал для сна воркеров в секундах
+# CRUMBLE_STRATEGY_WORKER_SLEEP_DURATION_SECONDS=30
+## временной интервал для отмены выставленного поручения в секундах
+# CRUMBLE_STRATEGY_SECONDS_TO_CANCEL_ORDER=3600
+```
 
 ## TUMBLE
 
@@ -48,10 +91,23 @@
 сразу выставляя поручение в обратную сторону, но с определенным процентом 
 прибыли. Параметры "стакана" задаются через файл конфигурации.
 
-**Не доступен в песочнице** (см. [issue](https://github.com/Tinkoff/investAPI/issues/176)).
+Работает на стримах.
 
-Подробное описание доступно в файле doc.go.
+Подробное описание доступно в файле 
+[doc.go](https://github.com/elkopass/BITA/blob/main/internal/trade/strategy/tumble/doc.go).
+
+**Не доступна в песочнице** (см. 
+[issue](https://github.com/Tinkoff/investAPI/issues/176).
 
 ### Конфигурация
 
-> TODO
+```bash
+## сколькими лотами должен торговать воркер для одного инструмента
+# TUMBLE_STRATEGY_LOTS_TO_BUY=1
+## минимальное соотношение (asks / bids) для продажи инструмента
+# TUMBLE_STRATEGY_ASKS_BIDS_RATIO=1.5
+## минимальное соотношение (bids / asks) соотношение для покупки инструмента
+# TUMBLE_STRATEGY_BIDS_ASKS_RATIO=1.5
+## глубина запрашиваемого стакана
+# TUMBLE_STRATEGY_ORDER_BOOK_DEPTH=10
+```
