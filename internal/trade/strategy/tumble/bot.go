@@ -23,7 +23,7 @@ type TradeBot struct {
 	config    TradeConfig
 	logger    *zap.SugaredLogger
 
-	tradesStream pb.OrdersStreamService_TradesStreamClient
+	tradesStream sdk.OrdersStream
 }
 
 type Order struct {
@@ -53,12 +53,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 		return errors.New("strategy is not available in sandbox, " +
 			"see https://github.com/Tinkoff/investAPI/issues/176")
 	} else {
-		oss := sdk.NewOrdersStreamService()
-		tradesStream, err := oss.TradesStream(&pb.TradesStreamRequest{Accounts: []string{tb.accountID}})
-		if err != nil {
-			tb.logger.Fatal(err)
-		}
-		tb.tradesStream = tradesStream
+		tb.tradesStream = *sdk.NewOrdersStream(&pb.TradesStreamRequest{Accounts: []string{tb.accountID}})
 	}
 
 	figi := config.TradeBotConfig().Figi
@@ -68,11 +63,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 		instruments = append(instruments, &pb.OrderBookInstrument{Figi: f, Depth: int32(tb.config.OrderBookDepth)})
 	}
 
-	mdss := sdk.NewMarketDataStreamService()
-	marketDataStream, err := mdss.MarketDataStream()
-	if err != nil {
-		tb.logger.Fatal(err)
-	}
+	mds := sdk.NewMarketDataStream()
 
 	request := pb.SubscribeOrderBookRequest{
 		Instruments:        instruments,
@@ -80,7 +71,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	}
 	payload := &pb.MarketDataRequest_SubscribeOrderBookRequest{SubscribeOrderBookRequest: &request}
 
-	err = marketDataStream.Send(&pb.MarketDataRequest{Payload: payload})
+	err = mds.Send(&pb.MarketDataRequest{Payload: payload})
 	if err != nil {
 		return err
 	}
@@ -89,7 +80,7 @@ func (tb TradeBot) Run(ctx context.Context) (err error) {
 	go tb.listenTradeStream(tradeStreamCtx)
 
 	for {
-		msg, err := marketDataStream.Recv()
+		msg, err := mds.Recv()
 		if err != nil {
 			tb.logger.Error(err)
 		}

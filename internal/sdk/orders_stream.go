@@ -7,31 +7,32 @@ import (
 )
 
 type OrdersStreamInterface interface {
-	// Stream сделок пользователя.
-	TradesStream(in *pb.TradesStreamRequest) (pb.OrdersStreamService_TradesStreamClient, error)
+	// Recv listens for incoming messages and block until first one is received.
+	Recv() (*pb.TradesStreamResponse, error)
 }
 
-type OrdersStreamService struct {
+type OrdersStream struct {
 	client pb.OrdersStreamServiceClient
+	stream pb.OrdersStreamService_TradesStreamClient
 }
 
-func NewOrdersStreamService() *OrdersStreamService {
+func NewOrdersStream(request *pb.TradesStreamRequest) *OrdersStream{
 	conn, err := createClientConn()
 	if err != nil {
 		loggy.GetLogger().Sugar().Fatal(err.Error())
 	}
 
 	client := pb.NewOrdersStreamServiceClient(conn)
-	return &OrdersStreamService{client: client}
-}
-
-func (oss OrdersStreamService) TradesStream(in *pb.TradesStreamRequest) (pb.OrdersStreamService_TradesStreamClient, error) {
 	ctx := createStreamContext()
 
-	res, err := oss.client.TradesStream(ctx, in)
+	stream, err := client.TradesStream(ctx, request)
 	if err != nil {
-		return nil, err
+		loggy.GetLogger().Sugar().Fatal(err.Error())
 	}
 
-	return res, nil
+	return &OrdersStream{client: client, stream: stream}
+}
+
+func (os OrdersStream) Recv() (*pb.TradesStreamResponse, error) {
+	return os.stream.Recv()
 }
