@@ -3,7 +3,7 @@ name: mkdocs
 on:
   push:
     paths:
-      - '.github/**'
+      - '.github/workflows/**'
       - 'docs/**'
       - 'mkdocs.yml'
 
